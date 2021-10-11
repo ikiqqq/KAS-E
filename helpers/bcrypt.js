@@ -8,8 +8,8 @@ function encrypt(rawPass) {
 };
 
 // function untuk mengecek password user pada saat signin
-function cekPass(rawPass, hashedPass) {
+function checkPass(rawPass, hashedPass) {
     return bcrypt.compareSync(rawPass, hashedPass);
 };
 
-module.exports = { encrypt, cekPass }
+module.exports = { encrypt, checkPass }

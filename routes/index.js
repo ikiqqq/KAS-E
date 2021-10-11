@@ -3,6 +3,6 @@ const router = express.Router();
 
 const usersRouter = require('./usersRoute')
 
-router.use('/v1/users', usersRouter)
+router.use('/users', usersRouter)
 
 module.exports = router;

@@ -11,18 +11,18 @@ const port = process.env.PORT || 5050;
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use('/api', router)
+app.use('/api/v1', router)
 
-app.get("/", (req, res)=>{
+app.get("/", (req, res) => {
     res.json({
-        message:"server running",
+        message: "server running",
         serverTime: new Date()
     })
 });
-app.get('*', (req, res ) => {
+app.get('*', (req, res) => {
     res.status(404).send("Page Not Found")
 });
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Server running on port ${port}`)
 })
