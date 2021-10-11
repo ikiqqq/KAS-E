@@ -1,21 +1,22 @@
 const Joi = require("joi");
 const { Limits } = require("../models");
-const {Categories} = require("../models");
+const { Categories } = require("../models");
+const { getUserData } = require("../helpers/jwt");
 
 module.exports = {
   postLimit: async (req, res) => {
     const body = req.body;
+    const userData = getUserData(req.headers.token);
     try {
       const schema = Joi.object({
         category_id: Joi.number().required(),
-        user_id: Joi.number().required(),
         limit: Joi.number().required(),
       });
 
       const { error } = schema.validate(
         {
           category_id: body.category_id,
-          user_id: body.user_id,
+          user_id: userData.id,
           limit: body.limit,
         },
         { abortEarly: false }
@@ -31,7 +32,7 @@ module.exports = {
 
       const check = await Limits.create({
         category_id: body.category_id,
-        user_id: body.user_id,
+        user_id: userData.id,
         limit: body.limit,
       });
 
@@ -57,14 +58,14 @@ module.exports = {
   getAllLimit: async (req, res) => {
     try {
       const limit = await Limits.findAll({
-        include:[
+        include: [
           {
             model: Categories,
-            as: "Category"
-          }
-        ]
+            as: "Category",
+          },
+        ],
       });
-      if (limit.length==0) {
+      if (limit.length == 0) {
         return res.status(404).json({
           status: "failed",
           message: "Data not found",
@@ -85,18 +86,20 @@ module.exports = {
   },
   getLimit: async (req, res) => {
     try {
+      const userData = getUserData(req.headers.token);
+      const userId = userData.id;
       const limit = await Limits.findAll({
-        where:{
-          user_id: req.params.id
+        where: {
+          user_id: userId,
         },
-        include:[
+        include: [
           {
             model: Categories,
-            as: "Category"
-          }
-        ]
+            as: "Category",
+          },
+        ],
       });
-      if (limit.length==0) {
+      if (limit.length == 0) {
         return res.status(404).json({
           status: "failed",
           message: "Data not found",
@@ -117,17 +120,17 @@ module.exports = {
   },
   updateLimit: async (req, res) => {
     const body = req.body;
+    const userData = getUserData(req.headers.token);
+    const userId = userData.id;
     try {
       const schema = Joi.object({
-        category_id: Joi.number().required(),
-        user_id: Joi.number().required(),
-        limit: Joi.number().required(),
+        category_id: Joi.number(),
+        limit: Joi.number(),
       });
 
       const { error } = schema.validate(
         {
           category_id: body.category_id,
-          user_id: body.user_id,
           limit: body.limit,
         },
         { abortEarly: false }
@@ -145,7 +148,7 @@ module.exports = {
         { ...body },
         {
           where: {
-            id: req.params.id,
+            user_id: userId,
           },
         }
       );
@@ -159,7 +162,7 @@ module.exports = {
 
       const data = await Limits.findOne({
         where: {
-          id: req.params.id,
+          user_id: userId,
         },
       });
 
@@ -177,10 +180,13 @@ module.exports = {
   },
   deleteLimit: async (req, res) => {
     const id = req.params.id;
+    const userData = getUserData(req.headers.token);
+    const userId = userData.id;
     try {
       const check = await Limits.destroy({
         where: {
-          id, // id : id
+          category_id: id,
+          user_id: userId
         },
       });
       if (!check) {
