@@ -195,20 +195,21 @@ module.exports = {
                 })
             }
 
-            const checkemail = await Users.findOne({
+            const user = await Users.findOne({
                 where: {
                     email: body.email
                 }
             })
 
-            if (!checkemail) {
+            if (!user) {
                 return res.status(400).json({
                     status: "failed",
                     message: "Invalid email",
                 });
             }
 
-            const checkPassword = bcrypt.checkPass(body.password, checkemail.dataValues.password)
+            const checkPassword = checkPass(body.password, user.dataValues.password)
+            console.log("🚀 ~ file: usersController.js ~ line 212 ~ login:async ~ checkPassword", checkPassword)
 
             if (!checkPassword) {
                 return res.status(401).json({
@@ -217,7 +218,18 @@ module.exports = {
                 })
             }
 
-            const token = jwt.generateToken(user)
+            if (user.dataValues.isVerified === false) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Please verify your email first'
+                })
+            }
+
+            const payload = {
+                email: user.dataValues.email,
+                id: user.dataValues.id
+            }
+            const token = jwt.generateToken(payload)
 
             return res.status(200).json({
                 status: "success",
