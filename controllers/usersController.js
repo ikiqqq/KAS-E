@@ -50,18 +50,18 @@ module.exports = {
                 });
             }
 
-            function checkPassword() {
-                let password = document.getElementById('password').value;
-                let confirmPassword = document.getElementById('confirmPassword').value;
-                console.log(password, confirmPassword)
-            }
+            // function checkPassword() {
+            //     let password = document.getElementById('password').value;
+            //     let confirmPassword = document.getElementById('confirmPassword').value;
+            //     console.log(password, confirmPassword)
+            // }
 
             const hashedPassword = bcrypt.encrypt(body.password)
 
             const user = await Users.create({
                 email: body.email,
                 username: body.username,
-                password: body.password,
+                password: hashedPassword,
                 confirmPassword: body.password,
             })
 
