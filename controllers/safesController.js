@@ -1,16 +1,23 @@
 const { Safes } = require("../models");
 const Joi = require("joi");
+const { getUserData } = require("../helpers/jwt");
 class safesController {
     static async createSafe(req, res) {
         const body = req.body;
         try {
-          const userData = getUserData(req.headers.token)
+          const userData = getUserData(req.headers.token);
+          const userId = userData.id
           const schema = Joi.object({
-            user_id: userData.id,
             safeName: Joi.string().min(4).required(),
             amount: Joi.string().required()
           });
-          const check = schema.validate({ ...body }, { abortEarly: false });
+          const check = schema.validate({
+            user_id: userId,
+            safeName: body.safeName,
+            amount: body.amount
+          }, 
+          { abortEarly: false });
+
           if (check.error) {
             return res.status(400).json({
               status: "failed",
