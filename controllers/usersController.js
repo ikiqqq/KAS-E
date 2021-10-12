@@ -51,6 +51,13 @@ module.exports = {
                 });
             }
 
+            if (body.password !== body.confirmPassword) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Password Does Not Match.",
+                });
+            }
+
             const user = await Users.create({
                 email: body.email,
                 password: encrypt(body.password),

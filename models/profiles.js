@@ -17,9 +17,12 @@ module.exports = (sequelize, DataTypes) => {
     Profiles.init({
         user_id: DataTypes.INTEGER,
         fullName: DataTypes.STRING,
-        gender: DataTypes.ENUM('male', 'female'),
+        gender: DataTypes.ENUM('Male', 'Female'),
         age: DataTypes.INTEGER,
-        profilePicture: DataTypes.STRING
+        profilePicture: {
+            type: DataTypes.STRING,
+            defaultValue: 'https://res.cloudinary.com/charactermovie/raw/upload/v1634025146/ProfileKasE/profilePictures/profile%20picture%20default%20-%202021-9-12%20-%2014-52-23-801.png'
+        }
     }, {
         sequelize,
         modelName: 'Profiles',

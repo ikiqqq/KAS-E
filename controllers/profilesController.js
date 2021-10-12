@@ -1,10 +1,11 @@
 const { Profiles, Users } = require('../models')
 const Joi = require('joi');
+const { checkPass, encrypt } = require('../helpers/bcrypt')
 
 module.exports = {
     getUserLogin: async(req, res) => {
         const user = req.user
-        console.log("🚀 ~ file: profilesController.js ~ line 10 ~ getUserLogin:async ~ user", user)
+
         try {
             const usersData = await Profiles.findOne({
                 where: { user_id: user.id },
@@ -37,22 +38,26 @@ module.exports = {
     },
     updateProfile: async(req, res) => {
         const body = req.body
-        const user_id = req.users.id
-        const id = req.params.id
+            //const id = req.params.id
+        const user = req.user
         try {
             const schema = Joi.object({
                 user_id: Joi.number(),
                 fullName: Joi.string(),
-                gender: Joi.boolean(),
+                //email: Joi.string(),
+                gender: Joi.string(),
                 age: Joi.number(),
+                password: Joi.string(),
                 profilePicture: Joi.string()
             })
 
             const { error } = schema.validate({
-                user_id: user_id,
+                user_id: user.id,
                 fullName: body.fullName,
+                //email: body.email,
                 gender: body.gender,
                 age: body.age,
+                password: body.password,
                 profilePicture: req.file ? req.file.path : "profilePicture"
             }, { abortEarly: false });
 
@@ -65,13 +70,13 @@ module.exports = {
             }
 
             if (body.password) {
-                const checkId = await Users.findOne({
+                const oldPass = await Users.findOne({
                     where: {
-                        id: req.params.id
+                        id: user.id
                     }
                 })
 
-                const checkPassword = bcrypt.cekPass(body.password, checkId.dataValues.password)
+                const checkPassword = checkPass(body.password, oldPass.dataValues.password)
 
                 if (checkPassword) {
                     return res.status(400).json({
@@ -80,17 +85,24 @@ module.exports = {
                     });
                 }
 
-                const hashedPassword = bcrypt.encrypt(body.password)
+                const hashedPassword = encrypt(body.password)
 
-                await Users.update({ password: hashedPassword }, { where: { id } });
+                await Users.update({ password: hashedPassword }, { where: { id: user.id } });
             }
 
             const userUpdate = await Users.update({
+                //email: body.email,
+                password: body.password
+            }, {
+                where: { id: user.id }
+            });
+
+            const profileUpdate = await Profiles.update({
                 fullName: body.fullName,
                 gender: body.gender,
                 age: body.age,
                 [req.file ? "profilePicture" : null]: req.file ? req.file.path : null
-            }, { where: { id } });
+            }, { where: { user_id: user.id } });
 
             if (!userUpdate) {
                 return res.status(400).json({
@@ -99,16 +111,28 @@ module.exports = {
                 });
             }
 
-            const data = await Users.findOne({
-                where: { id }
+            if (!profileUpdate) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Unable to input data"
+                });
+            }
+
+            const data = await Profiles.findOne({
+                where: { user_id: user.id },
+                include: {
+                    model: Users,
+                    attributes: ['id', 'email']
+                }
             })
 
             return res.status(200).json({
                 status: "success",
                 message: "Succesfully update the data",
-                data: data
+                data: { data }
             });
         } catch (error) {
+            console.log("🚀 ~ file: profilesController.js ~ line 135 ~ updateProfile:async ~ error", error)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error"
@@ -119,7 +143,7 @@ module.exports = {
     deleteUsers: async(req, res) => {
         const id = req.params.id
         try {
-            const UsersData = await Users.destroy({ where: { id } });
+            const UsersData = await Profiles.destroy({ where: { id } });
             if (!UsersData) {
                 return res.status(400).json({
                     status: "failed",
@@ -137,4 +161,5 @@ module.exports = {
             })
         }
     }
+
 }
