@@ -10,6 +10,7 @@ const port = process.env.PORT || 5050;
 
 app.use(express.json());
 app.use(cors());
+app.use(upload.array())
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', router)
 
