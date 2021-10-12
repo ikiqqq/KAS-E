@@ -29,7 +29,12 @@ module.exports = {
           errors: error["details"][0]["message"],
         });
       }
-
+      if(user_id && category_id){
+        return res.status(400).json({
+          status: "failed",
+          message: "Already exist",
+        })
+      }
       const check = await Limits.create({
         category_id: body.category_id,
         user_id: userData.id,
