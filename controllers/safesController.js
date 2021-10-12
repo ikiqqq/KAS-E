@@ -1,8 +1,9 @@
 const { Safes } = require("../models");
 const Joi = require("joi");
 const { getUserData } = require("../helpers/jwt");
-class safesController {
-    static async createSafe(req, res) {
+
+module.exports = {
+    createSafe: async (req, res) => {
         const body = req.body;
         try {
           const userData = getUserData(req.headers.token);
@@ -47,92 +48,90 @@ class safesController {
             message: error.message || "Internal Server Error",
           });
         }
-      }
+      },
 
-  static async getSafe(req, res) {
-    try {
-      const safe = await Safes.findAll();
-      if (!safe.length) {
-        return res.status(400).json({
-          status: "failed",
-          message: "There's no safe in database!",
-        });
-      } else {
-        return res
-          .status(200)
-          .json({
-            success: { message: "This is the list of safes" },
-            data: safe,
+    getSafe: async (req, res) => {
+      try {
+        const safe = await Safes.findAll();
+        if (!safe.length) {
+          return res.status(400).json({
+            status: "failed",
+            message: "There's no safe in database!",
           });
-      }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        status: "failed",
-        message: error.message || "Internal Server Error",
-      });
-    }
-  }
-
-  static async addIncome(req, res) {
-    try {
-      const id = req.params.id
-      const updateSafe = await Safes.update(
-        {
-          safeName: req.body.safeName,
-          amount: req.body.amount,
-        },
-        { where: { id } }
-      );
-
-      if (!updateSafe) {
-        return res.status(400).json({
+        } else {
+          return res
+            .status(200)
+            .json({
+              success: { message: "This is the list of safes" },
+              data: safe,
+            });
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({
           status: "failed",
-          message: "Failed to update!",
-        });
-        
-      } else {
-        return res.status(200).json({ 
-          status: "success", 
-          message: "Update success"
+          message: error.message || "Internal Server Error",
         });
       }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        status: "failed",
-        message: error.message || "Internal Server Error",
-      });
-    }
-  }
+    },
 
-  static async deleteSafe(req, res) {
-    try {
-      const deletedSafe = await Safes.destroy({
-        where: {
-          id: req.params.id,
-        },
-      });
+    addIncome: async (req, res) => {
+      try {
+        const id = req.params.id
+        const updateSafe = await Safes.update(
+          {
+            safeName: req.body.safeName,
+            amount: req.body.amount,
+          },
+          { where: { id } }
+        );
 
-      if (!deletedSafe) {
-        return res.status(400).json({
+        if (!updateSafe) {
+          return res.status(400).json({
+            status: "failed",
+            message: "Failed to update!",
+          });
+          
+        } else {
+          return res.status(200).json({ 
+            status: "success", 
+            message: "Update success"
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({
           status: "failed",
-          message: "Failed to delete!",
-        });
-      } else {
-        return res.status(200).json({
-          status: "success",
-          message: "Successfully delete safe!",
+          message: error.message || "Internal Server Error",
         });
       }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        status: "failed",
-        message: error.message || "Internal Server Error",
-      });
+    },
+
+    deleteSafe: async (req, res) => {
+      try {
+        const deletedSafe = await Safes.destroy({
+          where: {
+            id: req.params.id,
+          },
+        });
+
+        if (!deletedSafe) {
+          return res.status(400).json({
+            status: "failed",
+            message: "Failed to delete!",
+          });
+        } else {
+          return res.status(200).json({
+            status: "success",
+            message: "Successfully delete safe!",
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+          status: "failed",
+          message: error.message || "Internal Server Error",
+        });
+      }
     }
-  }
 }
-
-module.exports = safesController;
