@@ -38,13 +38,12 @@ module.exports = {
     },
     updateProfile: async(req, res) => {
         const body = req.body
-            //const id = req.params.id
         const user = req.user
         try {
             const schema = Joi.object({
                 user_id: Joi.number(),
                 fullName: Joi.string(),
-                //email: Joi.string(),
+                email: Joi.string(),
                 gender: Joi.string(),
                 age: Joi.number(),
                 password: Joi.string(),
@@ -54,7 +53,7 @@ module.exports = {
             const { error } = schema.validate({
                 user_id: user.id,
                 fullName: body.fullName,
-                //email: body.email,
+                email: body.email,
                 gender: body.gender,
                 age: body.age,
                 password: body.password,
@@ -91,7 +90,7 @@ module.exports = {
             }
 
             const userUpdate = await Users.update({
-                //email: body.email,
+                email: body.email,
                 password: body.password
             }, {
                 where: { id: user.id }
