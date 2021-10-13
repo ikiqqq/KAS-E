@@ -174,13 +174,13 @@ module.exports = {
                 password: Joi.string().min(6).max(12).required()
             })
 
-            const check = schema.validate({...body }, { abortEarly: false });
+            const {error} = schema.validate({...body });
 
-            if (check.error) {
+            if (error) {
                 return res.status(400).json({
                     status: "failed",
                     message: "Bad Request",
-                    errors: check.error["details"].map(({ message }) => message)
+                    errors: error.message
                 })
             }
 
@@ -226,10 +226,10 @@ module.exports = {
             });
 
         } catch (error) {
-            console.log("🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error", error)
+            console.log(error)
             return res.status(500).json({
                 status: "failed",
-                message: "Internal Server Error",
+                message: error.message || "Internal Server Error",
             });
         }
     }

@@ -1,12 +1,14 @@
 const Joi = require("joi");
 const { Limits } = require("../models");
 const { Categories } = require("../models");
-const { getUserData } = require("../helpers/jwt");
+const jwt = require("../helpers/jwt");
+const {getUserData} = require("../helpers/jwt")
 
 module.exports = {
   postLimit: async (req, res) => {
     const body = req.body;
-    const userData = getUserData(req.headers.token);
+    const token = req.header("Authorization").replace("Bearer ", "")
+    const user = jwt.getUserData(token)
     try {
       const schema = Joi.object({
         category_id: Joi.number().required(),
@@ -16,7 +18,6 @@ module.exports = {
       const { error } = schema.validate(
         {
           category_id: body.category_id,
-          user_id: userData.id,
           limit: body.limit,
         },
         { abortEarly: false }
@@ -29,15 +30,15 @@ module.exports = {
           errors: error["details"][0]["message"],
         });
       }
-      if(user_id && category_id){
-        return res.status(400).json({
-          status: "failed",
-          message: "Already exist",
-        })
-      }
+      const isExist=await Limits.findOne({
+        where:{
+          user_id:user.id,
+          category_id:body.category_id
+        }
+      })
       const check = await Limits.create({
         category_id: body.category_id,
-        user_id: userData.id,
+        user_id: user.id,
         limit: body.limit,
       });
 
@@ -91,11 +92,11 @@ module.exports = {
   },
   getLimit: async (req, res) => {
     try {
-      const userData = getUserData(req.headers.token);
-      const userId = userData.id;
+      const token = req.header("Authorization").replace("Bearer ", "")
+      const user = jwt.getUserData(token)
       const limit = await Limits.findAll({
         where: {
-          user_id: userId,
+          user_id: user.id,
         },
         include: [
           {
