@@ -3,8 +3,8 @@ const router = express.Router()
 const categories = require('../controllers/categoriesController')
 
 router.post("/", categories.postCategory )
-// router.get("/", limit.getAllLimit)
-// router.put("/:id", limit.updateLimit)
-// router.delete("/:id", limit.deleteLimit)
+router.get("/", categories.getCategory)
+router.put("/:id", categories.updateCategory)
+router.delete("/:id", categories.deleteCategory)
 
 module.exports = router

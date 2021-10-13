@@ -69,20 +69,16 @@ module.exports = {
       });
     }
   },
-  updateLimit: async (req, res) => {
+  updateCategory: async (req, res) => {
     const body = req.body;
     try {
       const schema = Joi.object({
-        category_id: Joi.number().required(),
-        user_id: Joi.number().required(),
-        limit: Joi.number().required(),
+        categoryName: Joi.string().required()
       });
 
       const { error } = schema.validate(
         {
-          category_id: body.category_id,
-          user_id: body.user_id,
-          limit: body.limit,
+          categoryName: body.categoryName
         },
         { abortEarly: false }
       );
@@ -95,7 +91,7 @@ module.exports = {
         });
       }
 
-      const updatedLimit = await Limits.update(
+      const updatedCategory = await Categories.update(
         { ...body },
         {
           where: {
@@ -104,14 +100,14 @@ module.exports = {
         }
       );
 
-      if (!updatedLimit[0]) {
+      if (!updatedCategory[0]) {
         return res.status(400).json({
           status: "failed",
           message: "Unable to update database",
         });
       }
 
-      const data = await Limits.findOne({
+      const data = await Categories.findOne({
         where: {
           id: req.params.id,
         },
@@ -129,10 +125,10 @@ module.exports = {
       });
     }
   },
-  deleteLimit: async (req, res) => {
+  deleteCategory: async (req, res) => {
     const id = req.params.id;
     try {
-      const check = await Limits.destroy({
+      const check = await Categories.destroy({
         where: {
           id, // id : id
         },
