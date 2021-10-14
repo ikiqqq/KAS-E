@@ -10,15 +10,15 @@ module.exports = (sequelize, DataTypes) => {
          * The `models/index` file will call this method automatically.
          */
         static associate(models) {
-            Limits.belongsTo(models.Categories, {
-                foreignKey: "category_id",
-                as: "Category"
-            })
-            Limits.belongsTo(models.Users, {
-                foreignKey: "user_id",
-                as: "User"
-            })
-            Limits.hasMany(models.Transactions, { foreignKey: 'limit_id' })
+            // Limits.belongsTo(models.Categories, {
+            //     foreignKey: "category_id",
+            //     as: "Category"
+            // })
+            // Limits.belongsTo(models.Users, {
+            //     foreignKey: "user_id",
+            //     as: "User"
+            // })
+            // Limits.hasMany(models.Transactions, { foreignKey: 'limit_id' })
         }
     };
     Limits.init({
