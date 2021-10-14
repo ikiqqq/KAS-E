@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid')
 const nodemailer = require("nodemailer");
 
 module.exports = {
-    register: async(req, res) => {
+    register: async (req, res) => {
         const body = req.body
         try {
             const schema = Joi.object({
@@ -94,7 +94,7 @@ module.exports = {
                     Just click the button below to verify your email address.
                 </p>
                 
-                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">Verify E-mail</a>
+                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">${txt}Verify E-mail</a>
             
                 <p>If the button doesn't work for any reason, you can also click on the link below:</p>
             
@@ -119,7 +119,7 @@ module.exports = {
         }
     },
 
-    verifyEmail: async(req, res) => {
+    verifyEmail: async (req, res) => {
         const { email, verifCode } = req.query
 
         try {
@@ -157,7 +157,7 @@ module.exports = {
                 message: 'Verification account success'
             })
 
-            return res.redirect('/users/login')
+            return res.redirect('/user/login')
         } catch (error) {
             return res.status(500).json({
                 status: 'failed',
@@ -166,7 +166,7 @@ module.exports = {
         }
     },
 
-    login: async(req, res) => {
+    login: async (req, res) => {
         const body = req.body
         try {
             const schema = Joi.object({
@@ -174,13 +174,13 @@ module.exports = {
                 password: Joi.string().min(6).max(12).required()
             })
 
-            const {error} = schema.validate({...body });
+            const check = schema.validate({ ...body }, { abortEarly: false });
 
-            if (error) {
+            if (check.error) {
                 return res.status(400).json({
                     status: "failed",
                     message: "Bad Request",
-                    errors: error.message
+                    errors: check.error["details"].map(({ message }) => message)
                 })
             }
 
@@ -226,11 +226,108 @@ module.exports = {
             });
 
         } catch (error) {
-            console.log(error)
+            console.log("🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error", error)
             return res.status(500).json({
                 status: "failed",
-                message: error.message || "Internal Server Error",
+                message: "Internal Server Error",
             });
         }
+    },
+
+    forgotPassword: async (req, res) => {
+        const body = req.body
+        try {
+
+            const user = await Users.findOne({ 
+                where : {
+                    email: body.email }
+                })
+console.log (user)
+            if (!user) return res.status(400).json({ msg: "This email does not exist." })
+
+            const secret = process.env.SECRET + user.password
+            const payload = {
+                email: user.dataValues.email,
+                id: user.dataValues.id
+            }
+            const token = jwt.generateToken(payload, secret)
+
+            let transporter = nodemailer.createTransport({
+                service: "Gmail",
+                auth: {
+                    user: "tesfadhlan@gmail.com",
+                    pass: "secret123!@#",
+                },
+            });
+
+            let url = `localhost:5050/api/v1/user/reset-password/${user.id}/${token}`
+
+            let info = await transporter.sendMail({
+                from: `tesfadhlan@gmail.com`,
+                to: `${user.email}`,
+                subject: "[Kas-E] Your Forgotton Password",
+                html: `
+                <div style="max-width: 700px; margin:auto; border: 10px solid #ddd; padding: 50px 20px; font-size: 110%;">
+                <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to Kas-E.</h2>
+                <p>Just click the button below to Update your password.
+                </p>
+                
+                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">Update Password</a>
+            
+                <p>If the button doesn't work for any reason, you can also click on the link below:</p>
+            
+                <a href="${url}">${url}</a>
+                </div>
+                `
+            })
+
+            console.log("Message sent: %s", info.messageId);
+            return res.json({ msg: "Re-send the password, please check your email." })
+
+        } catch (err) {
+            return res.status(500).json({ msg: err.message })
+        }
+    },
+
+    resetPassword: async (req, res) => {
+            const {id} = req.params
+            try {
+                const {password,confirmPassword} = req.body
+                
+                if (password !== confirmPassword) {
+                    return res.status(400).json({
+                        status: "failed",
+                        message: "Password Does Not Match.",
+                    });
+                }
+    
+                const updatePassword = await Users.update({
+                    password: encrypt (password),
+                    confirmPassword : encrypt (confirmPassword)
+                }, {
+                    where: { id: id }
+                });
+    
+                if (!updatePassword) {
+                    return res.status(400).json({
+                        status: "failed",
+                        message: "Unable to input data"
+                    });
+                }
+    
+                const data = await Users.findOne({
+                    where : {
+                        id: id}
+                    })
+    
+                res.status(200).json({
+                    status: "success",
+                    message: "Password successfully changed!",
+                    data: data
+                });
+                return res.redirect('/user/login')
+            } catch (err) {
+                return res.status(500).json({msg: err.message})
+            }
     }
 }

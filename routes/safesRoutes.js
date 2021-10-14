@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const safesController = require("../controllers/safesController");
+const auth = require('../middlewares/authentication')
 
-router.post("/create", safesController.createSafe);
-router.get("/", safesController.getSafe);
-router.patch("/:id", safesController.addIncome);
-router.delete("/:id", safesController.deleteSafe);
+router.post("/create", auth, safesController.createSafe);
+router.get("/", auth, safesController.getSafe);
+router.post("/income", auth, safesController.addIncomeAmount);
+router.delete("/:id", auth, safesController.deleteSafe);
 
 module.exports = router;
