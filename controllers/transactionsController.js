@@ -40,7 +40,6 @@ module.exports = {
                     as: 'user'
                 }
             })
-            console.log("🚀 ~ file: transactionsController.js ~ line 43 ~ postTransaction:async ~ safe", safe)
 
             if (!safe) {
                 return res.status(404).json({
@@ -129,6 +128,26 @@ module.exports = {
                 }
             })
 
+            const findLimit = await Transactions.findAll({
+                where: {
+                    limit_id: body.limit_id
+                }
+            })
+
+            let limitTransaction = findLimit.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b)
+
+            const newLimit = limit.limit - sumLimitTransaction
+
+            if (newLimit < 0) {
+                return res.status(201).json({
+                    message: 'Over limit ',
+                    data: newLimit
+                })
+            }
             return res.status(200).json({
                 status: 'success',
                 message: 'Successfully saved data to database',
@@ -150,8 +169,10 @@ module.exports = {
                 where: { user_id: user.id },
                 include: [{
                         model: Limits,
+                        as: 'Limit',
                         include: {
-                            model: Categories
+                            model: Categories,
+                            as: "Category"
                         }
                     },
                     {
