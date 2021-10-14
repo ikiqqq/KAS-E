@@ -1,3 +1,0 @@
-{
-    "categoryName"="Fun and Relax"
-}
