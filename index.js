@@ -19,7 +19,7 @@ app.use('/api/v1', router)
 
 app.get("/", (req, res) => {
     res.json({
-        message: "server running",
+        message: "server running in",
         serverTime: new Date()
     })
 });
