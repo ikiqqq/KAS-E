@@ -66,6 +66,7 @@ module.exports = {
             })
 
             const profile = await Profiles.create({
+                user_id: user.id,
                 fullName: body.fullName,
                 gender: body.gender,
                 age: body.age,
@@ -80,7 +81,7 @@ module.exports = {
                 },
             });
 
-            let url = `localhost:5050/api/v1/user/verify?email=${user.email}&verifCode=${user.verifCode}`
+            let url = `localhost:5050/api/v1/users/verify?email=${user.email}&verifCode=${user.verifCode}`
 
             let info = await transporter.sendMail({
                 from: `tesfadhlan@gmail.com`,
@@ -93,7 +94,7 @@ module.exports = {
                     Just click the button below to verify your email address.
                 </p>
                 
-                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">Verify E-mail</a>
+                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">${txt}Verify E-mail</a>
             
                 <p>If the button doesn't work for any reason, you can also click on the link below:</p>
             
@@ -106,7 +107,7 @@ module.exports = {
 
             return res.status(200).json({
                 status: "success",
-                message: "Registered successfully, please check your email"
+                message: "Registered successfully, please check your email",
             });
 
         } catch (error) {
@@ -151,10 +152,12 @@ module.exports = {
                     email: email
                 }
             });
-            return res.status(200).json({
+            res.status(200).json({
                 status: 'success',
                 message: 'Verification account success'
             })
+
+            return res.redirect('/user/login')
         } catch (error) {
             return res.status(500).json({
                 status: 'failed',
@@ -181,20 +184,20 @@ module.exports = {
                 })
             }
 
-            const checkemail = await Users.findOne({
+            const user = await Users.findOne({
                 where: {
                     email: body.email
                 }
             })
 
-            if (!checkemail) {
+            if (!user) {
                 return res.status(400).json({
                     status: "failed",
                     message: "Invalid email",
                 });
             }
 
-            const checkPassword = checkPass(body.password, checkemail.dataValues.password)
+            const checkPassword = checkPass(body.password, user.dataValues.password)
 
             if (!checkPassword) {
                 return res.status(401).json({
@@ -203,12 +206,18 @@ module.exports = {
                 })
             }
 
-            const user = {
-                email: checkemail.dataValues.email,
-                id: checkemail.dataValues.id
+            if (user.dataValues.isVerified === false) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Please verify your email first'
+                })
             }
 
-            const token = jwt.generateToken(user)
+            const payload = {
+                email: user.dataValues.email,
+                id: user.dataValues.id
+            }
+            const token = jwt.generateToken(payload)
 
             return res.status(200).json({
                 status: "success",
@@ -217,7 +226,7 @@ module.exports = {
             });
 
         } catch (error) {
-            console.log(error);
+            console.log("🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error", error)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
@@ -226,11 +235,14 @@ module.exports = {
     },
 
     forgotPassword: async (req, res) => {
-        const { email } = req.body
+        const body = req.body
         try {
 
-            const user = await Users.findOne({ email })
-
+            const user = await Users.findOne({ 
+                where : {
+                    email: body.email }
+                })
+console.log (user)
             if (!user) return res.status(400).json({ msg: "This email does not exist." })
 
             const secret = process.env.SECRET + user.password
@@ -278,41 +290,44 @@ module.exports = {
     },
 
     resetPassword: async (req, res) => {
-        const {id,token} = req.params
-        try {
-            const {password,confirmPassword} = req.body
-            
-            if (password !== confirmPassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Password Does Not Match.",
+            const {id} = req.params
+            try {
+                const {password,confirmPassword} = req.body
+                
+                if (password !== confirmPassword) {
+                    return res.status(400).json({
+                        status: "failed",
+                        message: "Password Does Not Match.",
+                    });
+                }
+    
+                const updatePassword = await Users.update({
+                    password: encrypt (password),
+                    confirmPassword : encrypt (confirmPassword)
+                }, {
+                    where: { id: id }
                 });
-            }
-
-            const updatePassword = await Users.update({
-                password: encrypt (password),
-                confirmPassword : encrypt (confirmPassword)
-            }, {
-                where: { id: id }
-            });
-
-            if (!updatePassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Unable to input data"
+    
+                if (!updatePassword) {
+                    return res.status(400).json({
+                        status: "failed",
+                        message: "Unable to input data"
+                    });
+                }
+    
+                const data = await Users.findOne({
+                    where : {
+                        id: id}
+                    })
+    
+                res.status(200).json({
+                    status: "success",
+                    message: "Password successfully changed!",
+                    data: data
                 });
+                return res.redirect('/user/login')
+            } catch (err) {
+                return res.status(500).json({msg: err.message})
             }
-
-            const data = await Users.findOne({_id: id, token : token})
-
-            res.status(200).json({
-                status: "success",
-                message: "Password successfully changed!",
-                data: data
-            });
-            return res.redirect('/user/login')
-        } catch (err) {
-            return res.status(500).json({msg: err.message})
-        }
     }
 }
