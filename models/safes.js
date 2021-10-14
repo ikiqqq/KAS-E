@@ -16,12 +16,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   Safes.init({
+  
     user_id: DataTypes.INTEGER,
     safeName: DataTypes.STRING,
     amount: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'Safes',
+    modelName: 'Safes'
+    // hooks: { afterFind: (safes) => {
+    //   if (safes.length > 0) {
+    //     safes.forEach(el => {
+    //       console.log("---", el.amount)
+    //       el.amount = el.amount.toString();
+    //     })
+    //   }
+      
+    //    } }
   });
   return Safes;
 };
