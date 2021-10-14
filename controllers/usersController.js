@@ -238,11 +238,12 @@ module.exports = {
         const body = req.body
         try {
 
-            const user = await Users.findOne({ 
-                where : {
-                    email: body.email }
-                })
-console.log (user)
+            const user = await Users.findOne({
+                where: {
+                    email: body.email
+                }
+            })
+            console.log(user)
             if (!user) return res.status(400).json({ msg: "This email does not exist." })
 
             const secret = process.env.SECRET + user.password
@@ -290,44 +291,80 @@ console.log (user)
     },
 
     resetPassword: async (req, res) => {
-            const {id} = req.params
-            try {
-                const {password,confirmPassword} = req.body
-                
-                if (password !== confirmPassword) {
-                    return res.status(400).json({
-                        status: "failed",
-                        message: "Password Does Not Match.",
-                    });
-                }
-    
-                const updatePassword = await Users.update({
-                    password: encrypt (password),
-                    confirmPassword : encrypt (confirmPassword)
-                }, {
-                    where: { id: id }
+        const { id } = req.params
+        try {
+
+            const {password, confirmPassword} = req.body
+            const schema = Joi.object({
+                password: Joi.string().min(6).max(12).required(),
+                confirmPassword: Joi.string().min(6).max(12).required(),
+            })
+
+            schema.validate({
+                password: password,
+                confirmPassword: password,
+            }, { abortEarly: false });
+
+            //checking fields
+            if (!password || !confirmPassword) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Please enter all fields.",
                 });
-    
-                if (!updatePassword) {
-                    return res.status(400).json({
-                        status: "failed",
-                        message: "Unable to input data"
-                    });
-                }
-    
-                const data = await Users.findOne({
-                    where : {
-                        id: id}
-                    })
-    
-                res.status(200).json({
-                    status: "success",
-                    message: "Password successfully changed!",
-                    data: data
-                });
-                return res.redirect('/user/login')
-            } catch (err) {
-                return res.status(500).json({msg: err.message})
             }
+
+            //checking matching password
+            if (password !== confirmPassword) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Password Does Not Match.",
+                });
+            }
+
+            //checking password length
+            const checkLength = password.length
+           if (checkLength < 6){
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Password must be at least min 6 characters and max 12 characters.",
+                });
+            } else if (checkLength > 12) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Password must be at least min 6 characters and max 12 characters.",
+                });
+            }
+
+
+            const updatePassword = await Users.update({
+                password: encrypt(password),
+                confirmPassword: encrypt(confirmPassword)
+            }, {
+                where: { id: id }
+            });
+
+            if (!updatePassword) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Unable to input data"
+                });
+            }
+
+            const data = await Users.findOne({
+                where: {
+                    id: id
+                }
+            })
+
+            res.status(200).json({
+                status: "success",
+                message: "Password successfully changed!",
+                data: data
+            });
+            return res.redirect('/user/login')
+        } catch (err) {
+            return res.status(500).json({ msg: err.message })
+        }
     }
+
 }
