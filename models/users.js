@@ -12,10 +12,10 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            // Users.hasMany(models.Profiles, { foreignKey: 'user_id', sourceKey: 'id' })
-            // Users.hasMany(models.Safes, { foreignKey: 'user_id', sourceKey: 'id' })
-            // Users.hasMany(models.Transactions, { foreignKey: 'user_id', sourceKey: 'id' })
-            // Users.hasMany(models.Limits, { foreignKey: 'user_id', sourceKey: 'id' })
+            Users.hasMany(models.Profiles, { foreignKey: 'user_id', sourceKey: 'id' })
+            Users.hasMany(models.Safes, { foreignKey: 'user_id', sourceKey: 'id' })
+            Users.hasMany(models.Transactions, { foreignKey: 'user_id', sourceKey: 'id' })
+            Users.hasMany(models.Limits, { foreignKey: 'user_id', sourceKey: 'id' })
         }
     };
     Users.init({
