@@ -125,7 +125,6 @@ module.exports = {
       });
     }
   },
-
   verifyEmail: async (req, res) => {
     const { email, verifCode } = req.query;
 
@@ -176,7 +175,6 @@ module.exports = {
       });
     }
   },
-
   login: async (req, res) => {
     const body = req.body;
     try {
@@ -246,7 +244,6 @@ module.exports = {
       });
     }
   },
-
   forgotPassword: async (req, res) => {
     const body = req.body;
     try {
@@ -264,41 +261,9 @@ module.exports = {
         email: user.dataValues.email,
         id: user.dataValues.id,
       };
-      console.log(payload)
+      console.log(payload);
       const token = jwt.generateToken(payload, secret);
-
-    //   let transporter = nodemailer.createTransport({
-    //     service: "Gmail",
-    //     auth: {
-    //       user: "tesfadhlan@gmail.com",
-    //       pass: "secret123!@#",
-    //     },
-    //   });
-    //   const handlebarOptions = {
-    //     viewEngine: {
-    //       partialsDir: path.resolve("./views/"),
-    //       defaultLayout: false,
-    //     },
-    //     viewPath: path.resolve("./views/"),
-    //   };
-    //   transporter.use("compile", hbs(handlebarOptions));
-
-    //   let mailOptions = {
-    //     from: `tesfadhlan@gmail.com`,
-    //     to: `${user.email}`,
-    //     subject: "[Kas-E] Your Forgotton Password",
-    //     template: "reset",
-    //     context: {
-    //       url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
-    //     },
-    //   };
-    //   transporter.sendMail(mailOptions, function (error, info) {
-    //     if (error) {
-    //       return console.log(error);
-    //     }
-    //     console.log("Message sent: " + info.response);
-    //   });
-    let transporter = nodemailer.createTransport({
+      let transporter = nodemailer.createTransport({
         service: "Gmail",
         auth: {
           user: "tesfadhlan@gmail.com",
@@ -326,139 +291,95 @@ module.exports = {
         if (error) {
           return console.log(error);
         }
-    },
-
-    forgotPassword: async (req, res) => {
-        const body = req.body
-        try {
-
-            const user = await Users.findOne({
-                where: {
-                    email: body.email
-                }
-            })
-            console.log(user)
-            if (!user) return res.status(400).json({ msg: "This email does not exist." })
-
-            const secret = process.env.SECRET + user.password
-            const payload = {
-                email: user.dataValues.email,
-                id: user.dataValues.id
-            }
-            const token = jwt.generateToken(payload, secret)
-
-            let transporter = nodemailer.createTransport({
-                service: "Gmail",
-                auth: {
-                    user: "tesfadhlan@gmail.com",
-                    pass: "secret123!@#",
-                },
-            });
-
-            let url = `localhost:5050/api/v1/user/reset-password/${user.id}/${token}`
-
-            let info = await transporter.sendMail({
-                from: `tesfadhlan@gmail.com`,
-                to: `${user.email}`,
-                subject: "[Kas-E] Your Forgotton Password",
-                html: `
-                <div style="max-width: 700px; margin:auto; border: 10px solid #ddd; padding: 50px 20px; font-size: 110%;">
-                <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to Kas-E.</h2>
-                <p>Just click the button below to Update your password.
-                </p>
-                
-                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">Update Password</a>
-            
-                <p>If the button doesn't work for any reason, you can also click on the link below:</p>
-            
-                <a href="${url}">${url}</a>
-                </div>
-                `
-            })
-
-            console.log("Message sent: %s", info.messageId);
-            return res.json({ msg: "Re-send the password, please check your email." })
-
-        } catch (err) {
-            return res.status(500).json({ msg: err.message })
-        }
-    },
-
-    resetPassword: async (req, res) => {
-        const { id } = req.params
-        try {
-
-            const {password, confirmPassword} = req.body
-            const schema = Joi.object({
-                password: Joi.string().min(6).max(12).required(),
-                confirmPassword: Joi.string().min(6).max(12).required(),
-            })
-
-            schema.validate({
-                password: password,
-                confirmPassword: password,
-            }, { abortEarly: false });
-
-            //checking fields
-            if (!password || !confirmPassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Please enter all fields.",
-                });
-            }
-
-            //checking matching password
-            if (password !== confirmPassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Password Does Not Match.",
-                });
-            }
-
-            //checking password length
-            const checkLength = password.length
-           if (checkLength < 6){
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Password must be at least min 6 characters and max 12 characters.",
-                });
-            } else if (checkLength > 12) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Password must be at least min 6 characters and max 12 characters.",
-                });
-            }
-
-
-            const updatePassword = await Users.update({
-                password: encrypt(password),
-                confirmPassword: encrypt(confirmPassword)
-            }, {
-                where: { id: id }
-            });
-
-            if (!updatePassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Unable to input data"
-                });
-            }
-
-            const data = await Users.findOne({
-                where: {
-                    id: id
-                }
-            })
-
-            res.status(200).json({
-                status: "success",
-                message: "Password successfully changed!",
-                data: data
-            });
-            return res.redirect('/user/login')
-        } catch (err) {
-            return res.status(500).json({ msg: err.message })
-        }
+        console.log("Message sent: " + info.response);
+      });
+      return res.status(200).json({
+        msg: "Re-send the password, please check your email.",
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
     }
+  },
+  resetPassword: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const { password, confirmPassword } = req.body;
+      const schema = Joi.object({
+        password: Joi.string().min(6).max(12).required(),
+        confirmPassword: Joi.string().min(6).max(12).required(),
+      });
 
-}
+      schema.validate(
+        {
+          password: password,
+          confirmPassword: password,
+        },
+        { abortEarly: false }
+      );
+
+      //checking fields
+      if (!password || !confirmPassword) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Please enter all fields.",
+        });
+      }
+
+      //checking matching password
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Password Does Not Match.",
+        });
+      }
+
+      //checking password length
+      const checkLength = password.length;
+      if (checkLength < 6) {
+        return res.status(400).json({
+          status: "failed",
+          message:
+            "Password must be at least min 6 characters and max 12 characters.",
+        });
+      } else if (checkLength > 12) {
+        return res.status(400).json({
+          status: "failed",
+          message:
+            "Password must be at least min 6 characters and max 12 characters.",
+        });
+      }
+
+      const updatePassword = await Users.update(
+        {
+          password: encrypt(password),
+          confirmPassword: encrypt(confirmPassword),
+        },
+        {
+          where: { id: id },
+        }
+      );
+
+      if (!updatePassword) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Unable to input data",
+        });
+      }
+
+      const data = await Users.findOne({
+        where: {
+          id: id,
+        },
+      });
+
+      res.status(200).json({
+        status: "success",
+        message: "Password successfully changed!",
+        data: data,
+      });
+      return res.redirect("/user/login");
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+};
