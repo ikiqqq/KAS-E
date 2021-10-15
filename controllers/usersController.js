@@ -1,236 +1,330 @@
-const { Users, Profiles } = require('../models')
-require('dotenv').config();
-const Joi = require('joi')
-const jwt = require("../helpers/jwt")
+const { Users, Profiles } = require("../models");
+require("dotenv").config();
+const Joi = require("joi");
+const jwt = require("../helpers/jwt");
 const { Op } = require("sequelize");
-const { encrypt, checkPass } = require("../helpers/bcrypt")
-const { v4: uuidv4 } = require('uuid')
+const { encrypt, checkPass } = require("../helpers/bcrypt");
+const { v4: uuidv4 } = require("uuid");
+const hbs = require("nodemailer-express-handlebars");
 const nodemailer = require("nodemailer");
+const path = require("path");
 
 module.exports = {
-    register: async (req, res) => {
-        const body = req.body
-        try {
-            const schema = Joi.object({
-                email: Joi.string().required(),
-                password: Joi.string().min(6).max(12).required(),
-                confirmPassword: Joi.string().min(6).max(12).required(),
-                fullName: Joi.string().required(),
-                gender: Joi.string().required(),
-                age: Joi.number().required(),
-                profilePicture: Joi.string()
-            })
+  register: async (req, res) => {
+    const body = req.body;
+    try {
+      const schema = Joi.object({
+        email: Joi.string().required(),
+        password: Joi.string().min(6).max(12).required(),
+        confirmPassword: Joi.string().min(6).max(12).required(),
+        fullName: Joi.string().required(),
+        gender: Joi.string().required(),
+        age: Joi.number().required(),
+        profilePicture: Joi.string(),
+      });
 
-            const check = schema.validate({
-                email: body.email,
-                password: body.password,
-                confirmPassword: body.password,
-                fullName: body.fullName,
-                gender: body.gender,
-                age: body.age,
-                profilePicture: req.file ? req.file.path : "profilePicture"
-            }, { abortEarly: false });
+      const check = schema.validate(
+        {
+          email: body.email,
+          password: body.password,
+          confirmPassword: body.password,
+          fullName: body.fullName,
+          gender: body.gender,
+          age: body.age,
+          profilePicture: req.file ? req.file.path : "profilePicture",
+        },
+        { abortEarly: false }
+      );
 
-            if (check.error) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Bad Request",
-                    errors: check.error["details"].map(({ message }) => message)
-                })
-            }
-            const checkEmail = await Users.findOne({
-                where: {
-                    email: body.email
-                }
-            })
+      if (check.error) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Bad Request",
+          errors: check.error["details"].map(({ message }) => message),
+        });
+      }
+      const checkEmail = await Users.findOne({
+        where: {
+          email: body.email,
+        },
+      });
 
-            if (checkEmail) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Email already used, please use another email, or login",
-                });
-            }
+      if (checkEmail) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Email already used, please use another email, or login",
+        });
+      }
 
-            if (body.password !== body.confirmPassword) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Password Does Not Match.",
-                });
-            }
+      if (body.password !== body.confirmPassword) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Password Does Not Match.",
+        });
+      }
 
-            const user = await Users.create({
-                email: body.email,
-                password: encrypt(body.password),
-                confirmPassword: encrypt(body.password),
-                verifCode: uuidv4()
-            })
+      const user = await Users.create({
+        email: body.email,
+        password: encrypt(body.password),
+        confirmPassword: encrypt(body.password),
+        verifCode: uuidv4(),
+      });
 
-            const profile = await Profiles.create({
-                user_id: user.id,
-                fullName: body.fullName,
-                gender: body.gender,
-                age: body.age,
-                [req.file ? "profilePicture" : null]: req.file ? req.file.path : null
-            })
+      const profile = await Profiles.create({
+        user_id: user.id,
+        fullName: body.fullName,
+        gender: body.gender,
+        age: body.age,
+        [req.file ? "profilePicture" : null]: req.file ? req.file.path : null,
+      });
 
-            let transporter = nodemailer.createTransport({
-                service: "Gmail",
-                auth: {
-                    user: "tesfadhlan@gmail.com",
-                    pass: "secret123!@#",
-                },
-            });
-
-            let url = `localhost:5050/api/v1/users/verify?email=${user.email}&verifCode=${user.verifCode}`
-
-            let info = await transporter.sendMail({
-                from: `tesfadhlan@gmail.com`,
-                to: `${user.email}`,
-                subject: "[Kas-E] Account Verification",
-                html: `
-                <div style="max-width: 700px; margin:auto; border: 10px solid #ddd; padding: 50px 20px; font-size: 110%;">
-                <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to Kas-E.</h2>
-                <p>Please verify your email.
-                    Just click the button below to verify your email address.
-                </p>
-                
-                <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">${txt}Verify E-mail</a>
-            
-                <p>If the button doesn't work for any reason, you can also click on the link below:</p>
-            
-                <a href="${url}">${url}</a>
-                </div>
-                `
-            });
-
-            console.log("Message sent: %s", info.messageId);
-
-            return res.status(200).json({
-                status: "success",
-                message: "Registered successfully, please check your email",
-            });
-
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({
-                status: "failed",
-                message: "Internal Server Error",
-            });
+      let transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: "tesfadhlan@gmail.com",
+          pass: "secret123!@#",
+        },
+      });
+      const handlebarOptions = {
+        viewEngine: {
+          partialsDir: path.resolve("./views/"),
+          defaultLayout: false,
+        },
+        viewPath: path.resolve("./views/"),
+      };
+      transporter.use("compile", hbs(handlebarOptions));
+      let mailOptions = {
+        from: `tesfadhlan@gmail.com`,
+        to: `${user.email}`,
+        subject: "[Kas-E] Account Verification",
+        template: "email",
+        // attachments: [
+        //   { filename: "pic.jpeg",
+        //   path: "./attachments/pic.jpeg" },
+        // ],
+        context: {
+          url: `http://kas-e.herokuapp.com/api/v1/user/verify?email=${user.email}&verifCode=${user.verifCode}`,
+        },
+      };
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          return console.log(error);
         }
-    },
+        console.log("Message sent: " + info.response);
+      });
 
-    verifyEmail: async (req, res) => {
-        const { email, verifCode } = req.query
+      return res.status(200).json({
+        status: "success",
+        message: "Registered successfully, please check your email",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "failed",
+        message: "Internal Server Error",
+      });
+    }
+  },
 
-        try {
-            let user = await Users.findOne({ where: { email: email } });
-            if (!user) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'E-mail not found'
-                });
-            }
+  verifyEmail: async (req, res) => {
+    const { email, verifCode } = req.query;
 
-            if (verifCode !== user.verifCode) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Verification code is not valid'
-                });
-            }
+    try {
+      let user = await Users.findOne({ where: { email: email } });
+      if (!user) {
+        return res.status(400).json({
+          status: "failed",
+          message: "E-mail not found",
+        });
+      }
 
-            if (user.isVerified === true) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Account already verified'
-                });
-            }
+      if (verifCode !== user.verifCode) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Verification code is not valid",
+        });
+      }
 
-            user = await Users.update({
-                isVerified: true
-            }, {
-                where: {
-                    email: email
-                }
-            });
-            res.status(200).json({
-                status: 'success',
-                message: 'Verification account success'
-            })
+      if (user.isVerified === true) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Account already verified",
+        });
+      }
 
-            return res.redirect('/user/login')
-        } catch (error) {
-            return res.status(500).json({
-                status: 'failed',
-                message: 'Internal server error'
-            })
+      const verify = await Users.update(
+        {
+          isVerified: true,
+        },
+        {
+          where: {
+            email: email,
+          },
         }
-    },
+      );
+      res.status(200).json({
+        status: "success",
+        message: "Verification account success",
+        data: verify,
+      });
 
-    login: async (req, res) => {
-        const body = req.body
-        try {
-            const schema = Joi.object({
-                email: Joi.string().required(),
-                password: Joi.string().min(6).max(12).required()
-            })
+      return res.redirect("/user/login");
+    } catch (error) {
+      return res.status(500).json({
+        status: "failed",
+        message: "Internal server error",
+      });
+    }
+  },
 
-            const check = schema.validate({ ...body }, { abortEarly: false });
+  login: async (req, res) => {
+    const body = req.body;
+    try {
+      const schema = Joi.object({
+        email: Joi.string().required(),
+        password: Joi.string().min(6).max(12).required(),
+      });
 
-            if (check.error) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Bad Request",
-                    errors: check.error["details"].map(({ message }) => message)
-                })
-            }
+      const check = schema.validate({ ...body }, { abortEarly: false });
 
-            const user = await Users.findOne({
-                where: {
-                    email: body.email
-                }
-            })
+      if (check.error) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Bad Request",
+          errors: check.error["details"].map(({ message }) => message),
+        });
+      }
 
-            if (!user) {
-                return res.status(400).json({
-                    status: "failed",
-                    message: "Invalid email",
-                });
-            }
+      const user = await Users.findOne({
+        where: {
+          email: body.email,
+        },
+      });
 
-            const checkPassword = checkPass(body.password, user.dataValues.password)
+      if (!user) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Invalid email",
+        });
+      }
 
-            if (!checkPassword) {
-                return res.status(401).json({
-                    status: "failed",
-                    message: "Invalid Password"
-                })
-            }
+      const checkPassword = checkPass(body.password, user.dataValues.password);
 
-            if (user.dataValues.isVerified === false) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Please verify your email first'
-                })
-            }
+      if (!checkPassword) {
+        return res.status(401).json({
+          status: "failed",
+          message: "Invalid Password",
+        });
+      }
 
-            const payload = {
-                email: user.dataValues.email,
-                id: user.dataValues.id
-            }
-            const token = jwt.generateToken(payload)
+      if (user.dataValues.isVerified === false) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Please verify your email first",
+        });
+      }
 
-            return res.status(200).json({
-                status: "success",
-                message: "Login successfully",
-                token: token,
-            });
+      const payload = {
+        email: user.dataValues.email,
+        id: user.dataValues.id,
+      };
+      const token = jwt.generateToken(payload);
 
-        } catch (error) {
-            console.log("🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error", error)
-            return res.status(500).json({
-                status: "failed",
-                message: "Internal Server Error",
-            });
+      return res.status(200).json({
+        status: "success",
+        message: "Login successfully",
+        token: token,
+      });
+    } catch (error) {
+      console.log(
+        "🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error",
+        error
+      );
+      return res.status(500).json({
+        status: "failed",
+        message: "Internal Server Error",
+      });
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    const body = req.body;
+    try {
+      const user = await Users.findOne({
+        where: {
+          email: body.email,
+        },
+      });
+      console.log(user);
+      if (!user)
+        return res.status(400).json({ msg: "This email does not exist." });
+
+      const secret = process.env.SECRET + user.password;
+      const payload = {
+        email: user.dataValues.email,
+        id: user.dataValues.id,
+      };
+      console.log(payload)
+      const token = jwt.generateToken(payload, secret);
+
+    //   let transporter = nodemailer.createTransport({
+    //     service: "Gmail",
+    //     auth: {
+    //       user: "tesfadhlan@gmail.com",
+    //       pass: "secret123!@#",
+    //     },
+    //   });
+    //   const handlebarOptions = {
+    //     viewEngine: {
+    //       partialsDir: path.resolve("./views/"),
+    //       defaultLayout: false,
+    //     },
+    //     viewPath: path.resolve("./views/"),
+    //   };
+    //   transporter.use("compile", hbs(handlebarOptions));
+
+    //   let mailOptions = {
+    //     from: `tesfadhlan@gmail.com`,
+    //     to: `${user.email}`,
+    //     subject: "[Kas-E] Your Forgotton Password",
+    //     template: "reset",
+    //     context: {
+    //       url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
+    //     },
+    //   };
+    //   transporter.sendMail(mailOptions, function (error, info) {
+    //     if (error) {
+    //       return console.log(error);
+    //     }
+    //     console.log("Message sent: " + info.response);
+    //   });
+    let transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: "tesfadhlan@gmail.com",
+          pass: "secret123!@#",
+        },
+      });
+      const handlebarOptions = {
+        viewEngine: {
+          partialsDir: path.resolve("./views/"),
+          defaultLayout: false,
+        },
+        viewPath: path.resolve("./views/"),
+      };
+      transporter.use("compile", hbs(handlebarOptions));
+      let mailOptions = {
+        from: `tesfadhlan@gmail.com`,
+        to: `${user.email}`,
+        subject: "[Kas-E] Your Forgotton Password",
+        template: "reset",
+        context: {
+          url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
+        },
+      };
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          return console.log(error);
         }
     },
 

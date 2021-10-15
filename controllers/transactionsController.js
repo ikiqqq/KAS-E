@@ -31,6 +31,66 @@ module.exports = {
                 });
             }
 
+            const safe = await Safes.findOne({
+                where: {
+                    id: body.safe_id
+                },
+                include: {
+                    model: Users,
+                    as: 'user'
+                }
+            })
+
+            if (!safe) {
+                return res.status(404).json({
+                    status: 'failed',
+                    message: 'Safe not found'
+                })
+            }
+            if (safe.user.id != user.id) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'You are not authorized to do this action'
+                })
+            }
+
+            if (safe.length == 0) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Please create safe first'
+                });
+            }
+
+            const limit = await Limits.findOne({
+                where: {
+                    id: body.limit_id
+                },
+                include: {
+                    model: Users,
+                    as: 'User'
+                }
+            });
+
+            if (!limit) {
+                return res.status(404).json({
+                    status: 'failed',
+                    message: 'Limit not found'
+                })
+            }
+            if (limit.User.id != user.id) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'You are not authorized to do this action'
+                })
+            }
+
+            if (limit.length == 0) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Please create limits first'
+                });
+            }
+
             const create = await Transactions.create({
                 user_id: user.id,
                 limit_id: body.limit_id,
@@ -57,8 +117,37 @@ module.exports = {
             });
 
             const sum = allCredit.reduce((a, b) => a + b)
-            console.log("🚀 ~ file: transactionsController.js ~ line 60 ~ postTransaction:async ~ sum", sum)
 
+            const newSafe = safe.amount - sum
+
+            const updateSafe = await Safes.update({
+                amount: newSafe
+            }, {
+                where: {
+                    user_id: user.id
+                }
+            })
+
+            const findLimit = await Transactions.findAll({
+                where: {
+                    limit_id: body.limit_id
+                }
+            })
+
+            let limitTransaction = findLimit.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b)
+
+            const newLimit = limit.limit - sumLimitTransaction
+
+            if (newLimit < 0) {
+                return res.status(201).json({
+                    message: 'Over limit ',
+                    data: newLimit
+                })
+            }
             return res.status(200).json({
                 status: 'success',
                 message: 'Successfully saved data to database',
@@ -80,8 +169,10 @@ module.exports = {
                 where: { user_id: user.id },
                 include: [{
                         model: Limits,
+                        as: 'Limit',
                         include: {
-                            model: Categories
+                            model: Categories,
+                            as: "Category"
                         }
                     },
                     {

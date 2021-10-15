@@ -1,6 +1,6 @@
 'use strict';
 const {
-  Model
+    Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Safes extends Model {
@@ -12,16 +12,26 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Safes.belongsTo(models.Users, {foreignKey: 'user_id', as: 'user'})
-      Safes.hasMany(models.Transactions, {as: 'transaction'})
+      Safes.hasMany(models.Transactions, {foreignKey: 'safe_id', as: 'safe'})
     }
   };
   Safes.init({
+  
     user_id: DataTypes.INTEGER,
     safeName: DataTypes.STRING,
     amount: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'Safes',
+    modelName: 'Safes'
+    // hooks: { afterFind: (safes) => {
+    //   if (safes.length > 0) {
+    //     safes.forEach(el => {
+    //       console.log("---", el.amount)
+    //       el.amount = el.amount.toString();
+    //     })
+    //   }
+      
+    //    } }
   });
   return Safes;
 };
