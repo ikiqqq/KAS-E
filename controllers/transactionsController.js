@@ -1,5 +1,6 @@
 const { Users, Limits, Safes, Transactions, Categories } = require('../models')
 const Joi = require('joi')
+const { Op } = require('sequelize')
 
 module.exports = {
     postTransaction: async(req, res) => {
@@ -13,6 +14,7 @@ module.exports = {
                 safe_id: Joi.number().required(),
                 detailExpense: Joi.string().required(),
                 expense: Joi.number().required()
+
             });
 
             const { error } = schema.validate({
@@ -40,6 +42,7 @@ module.exports = {
                     as: 'user'
                 }
             })
+            console.log("🚀 ~ file: transactionsController.js ~ line 43 ~ postTransaction:async ~ safe", safe)
 
             if (!safe) {
                 return res.status(404).json({
@@ -54,13 +57,6 @@ module.exports = {
                 })
             }
 
-            if (safe.length == 0) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Please create safe first'
-                });
-            }
-
             const limit = await Limits.findOne({
                 where: {
                     id: body.limit_id
@@ -70,6 +66,7 @@ module.exports = {
                     as: 'User'
                 }
             });
+            console.log("🚀 ~ file: transactionsController.js ~ line 74 ~ postTransaction:async ~ limit", limit)
 
             if (!limit) {
                 return res.status(404).json({
@@ -82,13 +79,6 @@ module.exports = {
                     status: 'failed',
                     message: 'You are not authorized to do this action'
                 })
-            }
-
-            if (limit.length == 0) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Please create limits first'
-                });
             }
 
             const create = await Transactions.create({
@@ -106,27 +96,14 @@ module.exports = {
                 });
             }
 
-            const credit = await Transactions.findAll({
-                where: {
-                    user_id: user.id
-                }
-            });
-
-            let allCredit = credit.map(e => {
-                return e.dataValues.expense
-            });
-
-            const sum = allCredit.reduce((a, b) => a + b)
-
-            const newSafe = safe.amount - sum
-
-            const updateSafe = await Safes.update({
-                amount: newSafe
-            }, {
-                where: {
-                    user_id: user.id
-                }
-            })
+            // const newSafe = safe.amount - create.expense
+            // const updateSafe = await Safes.update({
+            //     amount: newSafe
+            // }, {
+            //     where: {
+            //         user_id: user.id
+            //     }
+            // })
 
             const findLimit = await Transactions.findAll({
                 where: {
@@ -141,6 +118,7 @@ module.exports = {
             const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b)
 
             const newLimit = limit.limit - sumLimitTransaction
+            console.log("🚀 ~ file: transactionsController.js ~ line 147 ~ postTransaction:async ~ newLimit", newLimit)
 
             if (newLimit < 0) {
                 return res.status(201).json({
@@ -161,12 +139,38 @@ module.exports = {
         }
     },
 
+    /**
+     *tambah kolum, total amount, untuk update nilai setelah transaction
+     */
+
     getAllTransaction: async(req, res) => {
         const user = req.user;
+        let date = req.query.date
+        let where;
 
         try {
+            if (date) {
+                if (!date.match(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/)) {
+                    return res.status(400).json({
+                        status: 'failed',
+                        message: 'Date format not match'
+                    });
+                }
+                let dateFrom = new Date(date)
+                let dateTo = new Date(date).setDate(new Date(date).getDate() + 1)
+                where = {
+                    user_id: user.id,
+                    createdAt: {
+                        [Op.between]: [dateFrom, dateTo]
+                    }
+                }
+            } else {
+                where = {
+                    user_id: user.id
+                }
+            }
             const transactions = await Transactions.findAll({
-                where: { user_id: user.id },
+                where: where,
                 include: [{
                         model: Limits,
                         as: 'Limit',
@@ -196,6 +200,7 @@ module.exports = {
                 }
             })
         } catch (error) {
+            console.log("🚀 ~ file: transactionsController.js ~ line 196 ~ getAllTransaction:async ~ error", error)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
@@ -205,6 +210,9 @@ module.exports = {
 
     updateTransaction: async(req, res) => {
         const user = req.user;
+        console.log("🚀 ~ file: transactionsController.js ~ line 208 ~ updateTransaction:async ~ user", user)
+        const body = req.body
+        const id = req.params.id
 
         try {
             const schema = Joi.object({
@@ -215,7 +223,6 @@ module.exports = {
             });
 
             const { error } = schema.validate({
-                user_id: user.id,
                 limit_id: body.limit_id,
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
@@ -230,7 +237,7 @@ module.exports = {
                 });
             }
 
-            const updateTransaction = await Transactions.update({...body }, { where: { user_id: user.id } });
+            const updateTransaction = await Transactions.update({...body }, { where: { id: id } });
 
             if (!updateTransaction[0]) {
                 return res.status(400).json({
@@ -240,7 +247,7 @@ module.exports = {
             }
 
             const data = await Transactions.findOne({
-                where: { user_id: user.id }
+                where: { id: id, user_id: user.id }
             });
 
             return res.status(200).json({
@@ -251,6 +258,7 @@ module.exports = {
                 }
             });
         } catch (error) {
+            console.log("🚀 ~ file: transactionsController.js ~ line 257 ~ updateTransaction:async ~ error", error)
             return res.status(500).json({
                 status: 'failed',
                 message: 'Internal server error'
@@ -287,5 +295,8 @@ module.exports = {
                 message: 'Internal server error'
             });
         }
+    },
+    getYesterday: async(req, res) => {
+
     }
 }
