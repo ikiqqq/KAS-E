@@ -14,7 +14,6 @@ module.exports = {
                 safe_id: Joi.number().required(),
                 detailExpense: Joi.string().required(),
                 expense: Joi.number().required()
-
             });
 
             const { error } = schema.validate({
@@ -96,14 +95,14 @@ module.exports = {
                 });
             }
 
-            // const newSafe = safe.amount - create.expense
-            // const updateSafe = await Safes.update({
-            //     amount: newSafe
-            // }, {
-            //     where: {
-            //         user_id: user.id
-            //     }
-            // })
+            const newSafe = safe.amount - create.expense
+            const updateSafe = await Safes.update({
+                amount: newSafe
+            }, {
+                where: {
+                    user_id: user.id
+                }
+            })
 
             const findLimit = await Transactions.findAll({
                 where: {
@@ -138,10 +137,6 @@ module.exports = {
             })
         }
     },
-
-    /**
-     *tambah kolum, total amount, untuk update nilai setelah transaction
-     */
 
     getAllTransaction: async(req, res) => {
         const user = req.user;
@@ -271,12 +266,20 @@ module.exports = {
         const id = req.params.id;
 
         try {
-            const check = await Transactions.destroy({
+            const check = await Transactions.findOne({
                 where: {
                     user_id: user.id,
                     id: id
                 }
             });
+            const check1 = await Transactions.destroy({
+                where: {
+                    user_id: user.id,
+                    id: id
+                }
+            });
+
+            const newSafe = safe.amount + check.expense
 
             if (!check) {
                 return res.status(400).json({
@@ -295,8 +298,5 @@ module.exports = {
                 message: 'Internal server error'
             });
         }
-    },
-    getYesterday: async(req, res) => {
-
     }
 }
