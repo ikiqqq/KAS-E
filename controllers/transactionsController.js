@@ -14,7 +14,6 @@ module.exports = {
                 safe_id: Joi.number().required(),
                 detailExpense: Joi.string().required(),
                 expense: Joi.number().required()
-
             });
 
             const { error } = schema.validate({
@@ -96,15 +95,6 @@ module.exports = {
                 });
             }
 
-            // const newSafe = safe.amount - create.expense
-            // const updateSafe = await Safes.update({
-            //     amount: newSafe
-            // }, {
-            //     where: {
-            //         user_id: user.id
-            //     }
-            // })
-
             const findLimit = await Transactions.findAll({
                 where: {
                     limit_id: body.limit_id
@@ -138,10 +128,6 @@ module.exports = {
             })
         }
     },
-
-    /**
-     *tambah kolum, total amount, untuk update nilai setelah transaction
-     */
 
     getAllTransaction: async(req, res) => {
         const user = req.user;
@@ -295,8 +281,5 @@ module.exports = {
                 message: 'Internal server error'
             });
         }
-    },
-    getYesterday: async(req, res) => {
-
     }
 }
