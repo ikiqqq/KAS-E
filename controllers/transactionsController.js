@@ -95,15 +95,6 @@ module.exports = {
                 });
             }
 
-            const newSafe = safe.amount - create.expense
-            const updateSafe = await Safes.update({
-                amount: newSafe
-            }, {
-                where: {
-                    user_id: user.id
-                }
-            })
-
             const findLimit = await Transactions.findAll({
                 where: {
                     limit_id: body.limit_id
@@ -266,20 +257,12 @@ module.exports = {
         const id = req.params.id;
 
         try {
-            const check = await Transactions.findOne({
+            const check = await Transactions.destroy({
                 where: {
                     user_id: user.id,
                     id: id
                 }
             });
-            const check1 = await Transactions.destroy({
-                where: {
-                    user_id: user.id,
-                    id: id
-                }
-            });
-
-            const newSafe = safe.amount + check.expense
 
             if (!check) {
                 return res.status(400).json({
