@@ -92,6 +92,7 @@ module.exports = {
       }
     },
 
+
     addIncomeAmount: async (req, res) => {
       const user = req.user;
       const body = req.body;
