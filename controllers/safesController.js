@@ -9,7 +9,7 @@ module.exports = {
         const schema = Joi.object({
           user_id: Joi.number().required(),
           safeName: Joi.string().min(4).required(),
-          amount: Joi.string().required()
+          amount: Joi.number().required()
         });
         const check = schema.validate({
           user_id: user.id,
@@ -91,6 +91,7 @@ module.exports = {
         });
       }
     },
+
 
     addIncomeAmount: async (req, res) => {
       const user = req.user;

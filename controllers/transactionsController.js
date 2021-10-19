@@ -48,7 +48,7 @@ module.exports = {
                     message: 'Safe not found'
                 })
             }
-            if (safe.user.id != user.id) {
+            if (safe.user.dataValues.id != user.id) {
                 return res.status(400).json({
                     status: 'failed',
                     message: 'You are not authorized to do this action'
@@ -135,6 +135,7 @@ module.exports = {
                 data: { create }
             });
         } catch (error) {
+            console.log(error.message)
             return res.status(500).json({
                 status: 'failed',
                 message: 'Internal server error'
