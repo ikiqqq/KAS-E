@@ -30,12 +30,18 @@ module.exports = {
           errors: error["details"][0]["message"],
         });
       }
-      const isExist=await Limits.findOne({
-        where:{
-          user_id:user.id,
-          category_id:body.category_id
-        }
-      })
+      // const isExist=await Limits.findOne({
+      //   where:{
+      //     user_id: user.id
+      //     // category_id: body.category_id
+      //   }
+      // })
+      // if(!isExist){
+      //   return res.status(400).json({
+      //     status: "failed",
+      //     message: "User not found",
+      //   });
+      // }
       const check = await Limits.create({
         category_id: body.category_id,
         user_id: user.id,
