@@ -10,8 +10,14 @@ module.exports = (sequelize, DataTypes) => {
          * The `models/index` file will call this method automatically.
          */
         static associate(models) {
-
-
+            Limits.belongsTo(models.Categories, {
+                foreignKey: "category_id",
+                as: "Limit"
+            })
+            Limits.belongsTo(models.Users, {
+                foreignKey: "user_id",
+                as: "User"
+            })
         }
     };
     Limits.init({
