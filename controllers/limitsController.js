@@ -68,8 +68,12 @@ module.exports = {
     }
   },
   getAllLimit: async (req, res) => {
+    const user = req.user
     try {
       const limit = await Limits.findAll({
+        where:{
+          user_id: user.id
+        },
         include: [
           {
             model: Categories,
@@ -104,12 +108,12 @@ module.exports = {
         where: {
           user_id: user.id,
         },
-        include: [
-          {
-            model: Categories,
-            as: "Category",
-          },
-        ],
+        // include: [
+        //   {
+        //     model: Categories,
+        //     as: "Category",
+        //   },
+        // ],
       });
       if (limit.length == 0) {
         return res.status(404).json({
