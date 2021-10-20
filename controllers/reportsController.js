@@ -9,7 +9,7 @@ module.exports = {
             const transaction = await Transactions.findAll({
                 where: { user_id: user.id },
                 attributes: [
-                    [sequelize.fn("DATE", sequelize.col("createdAt")), "date"],
+                    [sequelize.fn("date_trunc","MONTH", sequelize.col("createdAt")), "date"],
                     [sequelize.fn("sum", sequelize.col("expense")), "totalExpense"],
                     [sequelize.fn("count", sequelize.col("id")), "count"],
                 ],
