@@ -5,8 +5,12 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Categories.hasMany(models.Limits, {
         foreignKey: "category_id",
-        as: "Category",
-      });
+        as: "Limit",
+      })
+      Categories.hasMany(models.Transactions,{
+        foreignKey:"category_id",
+        as:"Categories"
+      })
     }
   }
   Categories.init(

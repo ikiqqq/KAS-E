@@ -12,13 +12,16 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             Transactions.belongsTo(models.Users, { foreignKey: 'user_id', targetKey: 'id' })
-            Transactions.belongsTo(models.Limits, { foreignKey: 'limit_id', targetKey: 'id' })
+            Transactions.belongsTo(models.Categories, { 
+                foreignKey:"category_id",
+                as: "Categories"  
+            })
             Transactions.belongsTo(models.Safes, { foreignKey: 'safe_id', targetKey: 'id' })
         }
     };
     Transactions.init({
         user_id: DataTypes.INTEGER,
-        limit_id: DataTypes.INTEGER,
+        category_id: DataTypes.INTEGER,
         safe_id: DataTypes.INTEGER,
         detailExpense: DataTypes.STRING,
         expense: DataTypes.INTEGER

@@ -10,7 +10,7 @@ module.exports = {
     try {
       const schema = Joi.object({
         user_id: Joi.number().required(),
-        limit_id: Joi.number().required(),
+        category_id: Joi.number().required(),
         safe_id: Joi.number().required(),
         detailExpense: Joi.string().required(),
         expense: Joi.number().required(),
@@ -19,7 +19,7 @@ module.exports = {
       const { error } = schema.validate(
         {
           user_id: user.id,
-          limit_id: body.limit_id,
+          category_id: body.category_id,
           safe_id: body.safe_id,
           detailExpense: body.detailExpense,
           expense: body.expense,
@@ -61,7 +61,7 @@ module.exports = {
 
       const limit = await Limits.findOne({
         where: {
-          category_id: body.limit_id,
+          // category_id: body.category_id,
           user_id: user.id,
         },
         // include: {
@@ -86,7 +86,7 @@ module.exports = {
 
       const create = await Transactions.create({
         user_id: user.id,
-        limit_id: body.limit_id,
+        category_id: body.category_id,
         safe_id: body.safe_id,
         detailExpense: body.detailExpense,
         expense: body.expense,
@@ -101,7 +101,7 @@ module.exports = {
 
       const findLimit = await Transactions.findAll({
         where: {
-          limit_id: body.limit_id,
+          category_id: body.category_id,
           user_id: user.id,
         },
       });
@@ -168,17 +168,16 @@ module.exports = {
         where: where,
         include: [
           {
-            model: Limits,
-            as: "Limit",
-            include: {
-              model: Categories,
-              as: "Category",
-            },
-          },
-          {
-            model: Safes,
-          },
-        ],
+            model: Categories,
+            as: "Categories",
+            include:[{
+              where:{
+                user_id: user.id
+              },
+              model: Limits,
+              as: "Limit"
+            }]
+          }],
       });
 
       if (transactions.length == 0) {

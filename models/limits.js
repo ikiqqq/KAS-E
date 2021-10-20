@@ -12,13 +12,12 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             Limits.belongsTo(models.Categories, {
                 foreignKey: "category_id",
-                as: "Category"
+                as: "Limit"
             })
             Limits.belongsTo(models.Users, {
                 foreignKey: "user_id",
                 as: "User"
             })
-            Limits.hasMany(models.Transactions, { foreignKey: 'limit_id' })
         }
     };
     Limits.init({
