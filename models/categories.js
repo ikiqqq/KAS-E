@@ -12,15 +12,11 @@ module.exports = (sequelize, DataTypes) => {
         as:"Categories"
       })
     }
-  }
-  Categories.init(
-    {
-      categoryName: DataTypes.STRING,
-    },
-    {
-      sequelize,
-      modelName: "Categories",
-    }
-  );
-  return Categories;
+    Categories.init({
+        categoryName: DataTypes.STRING,
+    }, {
+        sequelize,
+        modelName: "Categories",
+    });
+    return Categories;
 };
