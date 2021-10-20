@@ -158,55 +158,55 @@ module.exports = {
       }
     },
 
-    // Tunggu dulu, tahan
-    addIncome: async (req, res) => {
+    updateSafe: async(req, res) => {
+      const user = req.user;
+      const body = req.body;
       try {
-        const user = req.user; 
-        // const id = req.params.id;
-        const updateSafe = await Safes.update(
-          {
-            user_id: user.id,
-            safeName: req.body.safeName,
-            amount: req.body.amount,
-          },
-          { where: 
-            { user_id: user.id } 
-          }
-        );
-
-        if (!updateSafe) {
-          return res.status(400).json({
-            status: "failed",
-            message: "Failed to update!",
+          const schema = Joi.object({
+              user_id: Joi.number(),
+              safeName: Joi.string(),
+              amount: Joi.number()
           });
-        };
-        
-        const updatedSafe = await Safes.findOne({
-          where: { 
-            user_id: user.id 
-          },
-          include: [
-            {
-              model: Users,
-              as: "user",
-              attributes: { 
-                exclude: ["password", "confirmPassword", "verifCode"] }
-            }
-          ]
-        });
-          
-        return res.status(200).json({ 
-          status: "success", 
-          message: "Update success",
-          data: updatedSafe
-        });
 
+          const { error } = schema.validate({
+              user_id: user.id,
+              safeName: body.safeName,
+              amount: body.amount
+          }, { abortEarly: false });
+
+          if (error) {
+              return res.status(400).json({
+                  status: 'failed',
+                  message: "Bad Request",
+                  errors: error["details"][0]["message"]
+              });
+          }
+
+          const updateSafe = await Safes.update({...body }, { where: { user_id: user.id } });
+
+          if (!updateSafe[0]) {
+              return res.status(400).json({
+                  status: 'failed',
+                  message: 'Unable to update safe'
+              });
+          }
+
+          const data = await Safes.findOne({
+              where: { user_id: user.id }
+          });
+
+          return res.status(200).json({
+              status: 'success',
+              message: 'Successfully retrieved data safe',
+              data: {
+                  data
+              }
+          });
       } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-          status: "failed",
-          message: error.message || "Internal Server Error",
-        });
+          return res.status(500).json({
+              status: 'failed',
+              message: 'Internal server error'
+          });
       }
     },
 
