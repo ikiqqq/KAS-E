@@ -1,4 +1,4 @@
-const { Safes} = require("../models");
+const { Safes } = require("../models");
 
 module.exports = async(req, res, next) => {
     try {
@@ -6,13 +6,23 @@ module.exports = async(req, res, next) => {
         const check = await Safes.findOne({
             where: {
                 user_id: user.id,
-              },
-              order:[['createdAt','DESC']],
-              attributes: ['createdAt'], 
+            },
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            attributes: ['id', 'createdAt'],
         })
-        const month= new Date(check.createdAt).getMonth()+1
-        const now = new Date().getMonth()+1
-        if(month!==now){
+
+        if (!check) {
+            return res.status(400).json({
+                status: 'failed',
+                message: 'You dont have safe yet'
+            })
+        }
+
+        const month = new Date(check.createdAt).getMonth() + 1
+        const now = new Date().getMonth() + 1
+        if (month !== now) {
             return res.status(400).json({
                 status: 'failed',
                 message: 'Create your safe first'
