@@ -149,7 +149,11 @@ module.exports = {
               model: Limits,
               as: "Limit"
             }]
-          }],
+          },
+          {
+            model: Safes
+            }
+        ],
       });
 
             if (transactions.length == 0) {
