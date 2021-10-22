@@ -252,7 +252,7 @@ module.exports = {
           email: body.email,
         },
       });
-      console.log(user);
+      // console.log(user);
       if (!user)
         return res.status(400).json({ msg: "This email does not exist." });
 
@@ -261,7 +261,7 @@ module.exports = {
         email: user.dataValues.email,
         id: user.dataValues.id,
       };
-      console.log(payload);
+      // console.log(payload);
       const token = jwt.generateToken(payload, secret);
       let transporter = nodemailer.createTransport({
         service: "Gmail",
@@ -400,6 +400,40 @@ module.exports = {
         const user = await Users.create({
           email: req.user._json.email,
           password: "",
+          confirmPassword : ""
+        });
+        payload = {
+          email: user.email,
+          id: user.id,
+        };
+      }
+console.log("test")
+      const token = jwt.generateToken (payload)
+      console.log(token)
+        return res.redirect('http://localhost:5050/api/v1/user/login?token='+ token);
+    } catch (error) {
+      console.log(error),
+      res.sendStatus(500)
+    }
+  },
+
+  facebook: async (req, res) => {
+    let payload;
+    try {
+      const checkEmail = await Users.findOne({
+        where: {
+          email: req.user._json.email,
+        },
+      });
+      if (checkEmail) {
+        payload = {
+          email: checkEmail.email,
+          id: checkEmail.id,
+        };
+      } else {
+        const user = await Users.create({
+          email: req.user._json.email,
+          password: "",
         });
         payload = {
           email: user.email,
@@ -407,8 +441,8 @@ module.exports = {
         };
       }
 
-      jwt.generateToken(payload, "passwordKita", { expiresIn: 3600 }, (err, token) => {
-        return  res.redirect('http://kas-e.herokuapp.com/api/v1/user/login?token='+ token);
+      jwt.generateToken(payload, "rahasia", { expiresIn: 3600 }, (err, token) => {
+        return  res.redirect('localhost:5050/api/v1/user/login?token='+ token);
       });
     } catch (error) {
       console.log(error),
