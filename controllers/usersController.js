@@ -5,9 +5,9 @@ const jwt = require("../helpers/jwt");
 const { Op } = require("sequelize");
 const { encrypt, checkPass } = require("../helpers/bcrypt");
 const { v4: uuidv4 } = require("uuid");
-const hbs = require("nodemailer-express-handlebars");
 const nodemailer = require("nodemailer");
 const path = require("path");
+
 
 module.exports = {
   register: async (req, res) => {
@@ -27,7 +27,7 @@ module.exports = {
         {
           email: body.email,
           password: body.password,
-          confirmPassword: body.password,
+          confirmPassword: body.confirmPassword,
           fullName: body.fullName,
           gender: body.gender,
           age: body.age,
@@ -66,7 +66,7 @@ module.exports = {
       const user = await Users.create({
         email: body.email,
         password: encrypt(body.password),
-        confirmPassword: encrypt(body.password),
+        confirmPassword: encrypt(body.confirmPassword),
         verifCode: uuidv4(),
       });
 
@@ -312,7 +312,7 @@ module.exports = {
       schema.validate(
         {
           password: password,
-          confirmPassword: password,
+          confirmPassword: confirmPassword,
         },
         { abortEarly: false }
       );
@@ -382,4 +382,38 @@ module.exports = {
       return res.status(500).json({ msg: err.message });
     }
   },
+
+  google: async (req, res) => {
+    let payload;
+    try {
+      const checkEmail = await Users.findOne({
+        where: {
+          email: req.user._json.email,
+        },
+      });
+      if (checkEmail) {
+        payload = {
+          email: checkEmail.email,
+          id: checkEmail.id,
+        };
+      } else {
+        const user = await Users.create({
+          email: req.user._json.email,
+          password: "",
+        });
+        payload = {
+          email: user.email,
+          id: user.id,
+        };
+      }
+
+      jwt.generateToken(payload, "passwordKita", { expiresIn: 3600 }, (err, token) => {
+        return  res.redirect('http://kas-e.herokuapp.com/api/v1/user/login?token='+ token);
+      });
+    } catch (error) {
+      console.log(error),
+      res.sendStatus(500)
+    }
+  },
+
 };
