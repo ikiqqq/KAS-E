@@ -409,7 +409,6 @@ module.exports = {
       }
 console.log("test")
       const token = jwt.generateToken (payload)
-      console.log(token)
         return res.redirect('http://localhost:5050/api/v1/user/login?token='+ token);
     } catch (error) {
       console.log(error),
