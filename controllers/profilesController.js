@@ -39,6 +39,7 @@ module.exports = {
     updateProfile: async(req, res) => {
         const body = req.body
         const user = req.user
+        console.log(req.file)
         try {
             const schema = Joi.object({
                 user_id: Joi.number(),

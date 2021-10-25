@@ -21,7 +21,6 @@ app.use(passport.session())
 
 
 app.use(cors());
-app.use(form.array())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //app.use(upload.array())
