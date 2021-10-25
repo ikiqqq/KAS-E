@@ -63,7 +63,6 @@ module.exports = {
             const create = await Transactions.create({
                 user_id: user.id,
                 category_id: body.category_id,
-                limit_id: id,
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
                 expense: body.expense,
@@ -141,10 +140,17 @@ module.exports = {
                 where: where,
                 include: [{
                         model: Categories,
+                        as: "Categories",
+                        include: [{
+                            where: {
+                                user_id: user.id
+                            },
+                            model: Limits,
+                            as: "Limit"
+                        }]
                     },
                     {
-                        model: Safes,
-                        as: 'Safe'
+                        model: Safes
                     }
                 ],
             });
