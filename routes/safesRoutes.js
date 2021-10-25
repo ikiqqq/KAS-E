@@ -6,6 +6,7 @@ const auth = require('../middlewares/authentication')
 router.post("/create", auth, safesController.createSafe);
 router.get("/", auth, safesController.getSafe);
 router.post("/income", auth, safesController.addIncomeAmount);
+router.put("/", auth, safesController.updateSafe);
 router.delete("/:id", auth, safesController.deleteSafe);
 
 module.exports = router;

@@ -1,5 +1,6 @@
-const { Users, Limits, Safes, Transactions, Categories } = require('../models')
-const Joi = require('joi')
+const { Users, Limits, Safes, Transactions, Categories } = require("../models");
+const Joi = require("joi");
+const { Op } = require("sequelize");
 
 module.exports = {
     postTransaction: async(req, res) => {
@@ -9,193 +10,168 @@ module.exports = {
         try {
             const schema = Joi.object({
                 user_id: Joi.number().required(),
-                limit_id: Joi.number().required(),
+                category_id: Joi.number().required(),
                 safe_id: Joi.number().required(),
                 detailExpense: Joi.string().required(),
-                expense: Joi.number().required()
+                expense: Joi.number().required(),
             });
 
             const { error } = schema.validate({
                 user_id: user.id,
-                limit_id: body.limit_id,
+                category_id: body.category_id,
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
-                expense: body.expense
+                expense: body.expense,
             }, { abortEarly: false });
 
             if (error) {
                 return res.status(400).json({
-                    status: 'failed',
-                    message: 'Bad Request',
-                    errors: error['details'][0]['message']
+                    status: "failed",
+                    message: "Bad Request",
+                    errors: error["details"][0]["message"],
                 });
             }
 
             const safe = await Safes.findOne({
                 where: {
-                    id: body.safe_id
-                },
-                include: {
-                    model: Users,
-                    as: 'user'
+                    id: body.safe_id,
+                    user_id: user.id
                 }
-            })
+            });
 
             if (!safe) {
                 return res.status(404).json({
-                    status: 'failed',
-                    message: 'Safe not found'
-                })
-            }
-            if (safe.user.id != user.id) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'You are not authorized to do this action'
-                })
-            }
-
-            if (safe.length == 0) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Please create safe first'
+                    status: "failed",
+                    message: "Safe not found",
                 });
             }
 
             const limit = await Limits.findOne({
                 where: {
-                    id: body.limit_id
-                },
-                include: {
-                    model: Users,
-                    as: 'User'
+                    category_id: body.category_id,
+                    user_id: user.id,
                 }
             });
 
             if (!limit) {
                 return res.status(404).json({
-                    status: 'failed',
-                    message: 'Limit not found'
-                })
-            }
-            if (limit.User.id != user.id) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'You are not authorized to do this action'
-                })
-            }
-
-            if (limit.length == 0) {
-                return res.status(400).json({
-                    status: 'failed',
-                    message: 'Please create limits first'
+                    status: "failed",
+                    message: "Limit not found",
                 });
             }
 
-            const create = await Transactions.create({
-                user_id: user.id,
-                limit_id: body.limit_id,
-                safe_id: body.safe_id,
-                detailExpense: body.detailExpense,
-                expense: body.expense
-            });
+      const create = await Transactions.create({
+        user_id: user.id,
+        category_id: body.category_id,
+        safe_id: body.safe_id,
+        detailExpense: body.detailExpense,
+        expense: body.expense,
+      });
 
             if (!create) {
                 return res.status(400).json({
-                    status: 'failed',
-                    message: 'Unable to save data to database'
+                    status: "failed",
+                    message: "Unable to save data to database",
                 });
             }
 
-            const credit = await Transactions.findAll({
-                where: {
-                    user_id: user.id
-                }
-            });
-
-            let allCredit = credit.map(e => {
-                return e.dataValues.expense
-            });
-
-            const sum = allCredit.reduce((a, b) => a + b)
-
-            const newSafe = safe.amount - sum
-
-            const updateSafe = await Safes.update({
-                amount: newSafe
-            }, {
-                where: {
-                    user_id: user.id
-                }
-            })
-
             const findLimit = await Transactions.findAll({
                 where: {
-                    limit_id: body.limit_id
-                }
-            })
-
-            let limitTransaction = findLimit.map(e => {
-                return e.dataValues.expense
+                    category_id: body.category_id,
+                    user_id: user.id,
+                },
             });
 
-            const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b)
+            let limitTransaction = findLimit.map((e) => {
+                return e.dataValues.expense;
+            });
 
-            const newLimit = limit.limit - sumLimitTransaction
+            const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
+
+            const newLimit = limit.limit - sumLimitTransaction;
 
             if (newLimit < 0) {
-                return res.status(201).json({
-                    message: 'Over limit ',
-                    data: newLimit
-                })
+                return res.status(201).json({ //warning
+                    message: "Over limit ",
+                    data: newLimit,
+                });
             }
             return res.status(200).json({
-                status: 'success',
-                message: 'Successfully saved data to database',
-                data: { create }
+                status: "success",
+                message: "Successfully saved data to database",
+                data: { create },
             });
         } catch (error) {
+            console.log(error.message);
             return res.status(500).json({
-                status: 'failed',
-                message: 'Internal server error'
-            })
+                status: "failed",
+                message: "Internal server error",
+            });
         }
     },
 
     getAllTransaction: async(req, res) => {
         const user = req.user;
+        let date = req.query.date;
+        let where;
 
-        try {
-            const transactions = await Transactions.findAll({
-                where: { user_id: user.id },
-                include: [{
-                        model: Limits,
-                        as: 'Limit',
-                        include: {
-                            model: Categories,
-                            as: "Category"
-                        }
-                    },
-                    {
-                        model: Safes
-                    }
-                ]
-            });
+    try {
+      if (date) {
+        if (!date.match(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/)) {
+          return res.status(400).json({
+            status: "failed",
+            message: "Date format not match",
+          });
+        }
+        let dateFrom = new Date(date);
+        let dateTo = new Date(date).setDate(new Date(date).getDate() + 1);
+        where = {
+          user_id: user.id,
+          createdAt: {
+            [Op.between]: [dateFrom, dateTo],
+          },
+        };
+      } else {
+        where = {
+          user_id: user.id,
+        };
+      }
+      const transactions = await Transactions.findAll({
+        where: where,
+        include: [
+          {
+            model: Categories,
+            as: "Categories",
+            include:[{
+              where:{
+                user_id: user.id
+              },
+              model: Limits,
+              as: "Limit"
+            }]
+          },
+          {
+            model: Safes
+            }
+        ],
+      });
 
             if (transactions.length == 0) {
                 return res.status(404).json({
-                    status: 'failed',
-                    message: 'Data not found'
+                    status: "failed",
+                    message: "Data not found",
                 });
             }
 
             return res.status(200).json({
-                status: 'success',
-                message: 'Successfully retrieved data transactions',
+                status: "success",
+                message: "Successfully retrieved data transactions",
                 data: {
-                    transactions
-                }
-            })
+                    transactions,
+                },
+            });
         } catch (error) {
+            console.log(error.message)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
@@ -205,55 +181,57 @@ module.exports = {
 
     updateTransaction: async(req, res) => {
         const user = req.user;
+        const body = req.body;
+        const id = req.params.id;
 
         try {
             const schema = Joi.object({
-                limit_id: Joi.number(),
+                category_id: Joi.number(),
                 safe_id: Joi.number(),
                 detailExpense: Joi.string(),
-                expense: Joi.number()
+                expense: Joi.number(),
             });
 
             const { error } = schema.validate({
-                user_id: user.id,
-                limit_id: body.limit_id,
+                category_id: body.category_id,
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
-                expense: body.expense
+                expense: body.expense,
             }, { abortEarly: false });
 
             if (error) {
                 return res.status(400).json({
-                    status: 'failed',
+                    status: "failed",
                     message: "Bad Request",
-                    errors: error["details"][0]["message"]
+                    errors: error["details"][0]["message"],
                 });
             }
 
-            const updateTransaction = await Transactions.update({...body }, { where: { user_id: user.id } });
+            const updateTransaction = await Transactions.update({...body }, { where: { id: id } });
 
             if (!updateTransaction[0]) {
                 return res.status(400).json({
-                    status: 'failed',
-                    message: 'Unable to update transaction'
+                    status: "failed",
+                    message: "Unable to update transaction",
                 });
             }
 
             const data = await Transactions.findOne({
-                where: { user_id: user.id }
+                where: { id: id, user_id: user.id },
             });
 
             return res.status(200).json({
-                status: 'success',
-                message: 'Successfully retrieved data transactions',
+                status: "success",
+                message: "Successfully retrieved data transactions",
                 data: {
-                    data
-                }
+                    data,
+                },
             });
         } catch (error) {
+            console.log(error.message)
             return res.status(500).json({
-                status: 'failed',
-                message: 'Internal server error'
+                status: "failed",
+                message: "Internal server error",
             });
         }
     },
@@ -266,8 +244,8 @@ module.exports = {
             const check = await Transactions.destroy({
                 where: {
                     user_id: user.id,
-                    id: id
-                }
+                    id: id,
+                },
             });
 
             if (!check) {
@@ -283,9 +261,9 @@ module.exports = {
             });
         } catch (error) {
             return res.status(500).json({
-                status: 'failed',
-                message: 'Internal server error'
+                status: "failed",
+                message: "Internal server error",
             });
         }
-    }
-}
+    },
+};

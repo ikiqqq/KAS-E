@@ -30,12 +30,18 @@ module.exports = {
           errors: error["details"][0]["message"],
         });
       }
-      const isExist=await Limits.findOne({
-        where:{
-          user_id:user.id,
-          category_id:body.category_id
-        }
-      })
+      // const isExist=await Limits.findOne({
+      //   where:{
+      //     user_id: user.id
+      //     // category_id: body.category_id
+      //   }
+      // })
+      // if(!isExist){
+      //   return res.status(400).json({
+      //     status: "failed",
+      //     message: "User not found",
+      //   });
+      // }
       const check = await Limits.create({
         category_id: body.category_id,
         user_id: user.id,
@@ -62,8 +68,12 @@ module.exports = {
     }
   },
   getAllLimit: async (req, res) => {
+    const user = req.user
     try {
       const limit = await Limits.findAll({
+        where:{
+          user_id: user.id
+        },
         include: [
           {
             model: Categories,
@@ -98,12 +108,12 @@ module.exports = {
         where: {
           user_id: user.id,
         },
-        include: [
-          {
-            model: Categories,
-            as: "Category",
-          },
-        ],
+        // include: [
+        //   {
+        //     model: Categories,
+        //     as: "Category",
+        //   },
+        // ],
       });
       if (limit.length == 0) {
         return res.status(404).json({
