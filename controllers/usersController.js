@@ -5,6 +5,7 @@ const jwt = require("../helpers/jwt");
 const { Op } = require("sequelize");
 const { encrypt, checkPass } = require("../helpers/bcrypt");
 const { v4: uuidv4 } = require("uuid");
+const hbs = require("nodemailer-express-handlebars");
 const nodemailer = require("nodemailer");
 const path = require("path");
 
