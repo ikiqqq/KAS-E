@@ -238,76 +238,144 @@ login: async (req, res) => {
     }
 },
 forgotPassword: async (req, res) => {
-    const body = req.body;
-    try {
-      const user = await Users.findOne({
-        where: {
-          email: body.email,
-        },
-      });
-      // console.log(user);
-      if (!user)
-        return res.status(400).json({ msg: "This email does not exist." });
+  const body = req.body;
+  try {
+    const user = await Users.findOne({
+      where: {
+        email: body.email,
+      },
+    });
+    // console.log(user);
+    if (!user)
+      return res.status(400).json({ msg: "This email does not exist." });
 
-      const secret = process.env.SECRET + user.password;
-      const payload = {
-        email: user.dataValues.email,
-        id: user.dataValues.id,
-      };
-      // console.log(payload);
-      const token = jwt.generateToken(payload, secret);
-      let transporter = nodemailer.createTransport({
-        service: "Gmail",
-        auth: {
-          user: "tesfadhlan@gmail.com",
-          pass: "secret123!@#",
-        },
-      });
-      const handlebarOptions = {
-        viewEngine: {
-          partialsDir: path.resolve("./views/"),
-          defaultLayout: false,
-        },
-        viewPath: path.resolve("./views/"),
-      };
-      transporter.use("compile", hbs(handlebarOptions));
-      let mailOptions = {
-        from: `tesfadhlan@gmail.com`,
-        to: `${user.email}`,
-        subject: "[Kas-E] Your Forgotton Password",
-        template: "reset",
-        context: {
-          url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
-        },
-      };
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          return console.log(error);
-        }
-      })
-      if (!updatePassword) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Unable to input data",
-        });
+    const secret = process.env.SECRET + user.password;
+    const payload = {
+      email: user.dataValues.email,
+      id: user.dataValues.id,
+    };
+    // console.log(payload);
+    const token = jwt.generateToken(payload, secret);
+    let transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: "tesfadhlan@gmail.com",
+        pass: "secret123!@#",
+      },
+    });
+    const handlebarOptions = {
+      viewEngine: {
+        partialsDir: path.resolve("./views/"),
+        defaultLayout: false,
+      },
+      viewPath: path.resolve("./views/"),
+    };
+    transporter.use("compile", hbs(handlebarOptions));
+    let mailOptions = {
+      from: `tesfadhlan@gmail.com`,
+      to: `${user.email}`,
+      subject: "[Kas-E] Your Forgotton Password",
+      template: "reset",
+      context: {
+        url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
+      },
+    };
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        return console.log(error);
       }
-
-      const data = await Users.findOne({
-        where: {
-          id: id,
-        },
-      });
-
-      res.status(200).json({
-        status: "success",
-        message: "Password successfully changed!",
-        data: data,
-      });
-      return res.redirect("/user/login");
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
+      console.log("Message sent: " + info.response);
+    });
+    return res.status(200).json({
+      msg: "Re-send the password, please check your email.",
+    });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
 },
+resetPassword: async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { password, confirmPassword } = req.body;
+    const schema = Joi.object({
+      password: Joi.string().min(6).max(12).required(),
+      confirmPassword: Joi.string().min(6).max(12).required(),
+    });
+
+    schema.validate(
+      {
+        password: password,
+        confirmPassword: confirmPassword,
+      },
+      { abortEarly: false }
+    );
+
+    //checking fields
+    if (!password || !confirmPassword) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Please enter all fields.",
+      });
+    }
+
+    //checking matching password
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Password Does Not Match.",
+      });
+    }
+
+    //checking password length
+    const checkLength = password.length;
+    if (checkLength < 6) {
+      return res.status(400).json({
+        status: "failed",
+        message:
+          "Password must be at least min 6 characters and max 12 characters.",
+      });
+    } else if (checkLength > 12) {
+      return res.status(400).json({
+        status: "failed",
+        message:
+          "Password must be at least min 6 characters and max 12 characters.",
+      });
+    }
+
+    const updatePassword = await Users.update(
+      {
+        password: encrypt(password),
+        confirmPassword: encrypt(confirmPassword),
+      },
+      {
+        where: { id: id },
+      }
+    );
+
+    if (!updatePassword) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Unable to input data",
+      });
+    }
+
+    const data = await Users.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Password successfully changed!",
+      data: data,
+    });
+    return res.redirect("/user/login");
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+},
+
 google: async(req, res) => {
   let payload;
     try {

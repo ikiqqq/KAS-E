@@ -102,7 +102,7 @@ module.exports = {
   getLimit: async (req, res) => {
     try {
       const token = req.header("Authorization").replace("Bearer ", "")
-      const user = jwt.getUserData(token)
+      const user = req.user
       const limit = await Limits.findAll({
         where: {
           user_id: user.id,
@@ -113,6 +113,7 @@ module.exports = {
             as: "Limit",
           },
         ],
+        order:[['category_id','ASC']]
       });
       if (limit.length == 0) {
         return res.status(404).json({
