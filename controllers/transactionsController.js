@@ -56,7 +56,7 @@ postTransaction: async(req, res) => {
             if (!limit) {
                 return res.status(404).json({
                     status: "failed",
-                    message: "Limit not found",
+                    message: "Limit in this category is not found. Please set limit first",
                 });
             }
 
