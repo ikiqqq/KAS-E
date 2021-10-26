@@ -3,7 +3,7 @@ const Joi = require("joi");
 const { Op } = require("sequelize");
 
 module.exports = {
-    postTransaction: async(req, res) => {
+postTransaction: async(req, res) => {
         const user = req.user;
         const body = req.body;
 
@@ -108,9 +108,8 @@ module.exports = {
                 message: "Internal server error",
             });
         }
-    },
-
-    getAllTransaction: async(req, res) => {
+},
+getAllTransaction: async(req, res) => {
         const user = req.user;
         let date = req.query.date;
         let where;
@@ -176,9 +175,8 @@ module.exports = {
                 message: "Internal Server Error",
             });
         }
-    },
-
-    updateTransaction: async(req, res) => {
+},
+updateTransaction: async(req, res) => {
         const user = req.user;
         const body = req.body;
         const id = req.params.id;
@@ -233,9 +231,8 @@ module.exports = {
                 message: "Internal server error",
             });
         }
-    },
-
-    deleteTransaction: async(req, res) => {
+},
+deleteTransaction: async(req, res) => {
         const user = req.user;
         const id = req.params.id;
 
@@ -264,5 +261,5 @@ module.exports = {
                 message: "Internal server error",
             });
         }
-    },
+},
 };

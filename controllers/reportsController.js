@@ -1,9 +1,10 @@
 const { Transactions } = require("../models");
 const sequelize = require("sequelize");
 
-// Daily Report
+
 module.exports = {
-    getDaily: async (req, res) => {
+// Daily Report
+getDaily: async (req, res) => {
         const user = req.user;
         try {
             const transaction = await Transactions.findAll({
@@ -50,10 +51,9 @@ module.exports = {
                 },
             });
         }
-    },
-
-    // Monthly Report
-    getMonthly: async (req, res) => {
+},
+// Monthly Report
+getMonthly: async (req, res) => {
         const user = req.user;
         try {
             const transaction = await Transactions.findAll({
@@ -86,5 +86,5 @@ module.exports = {
                 error: { message: "Internal Server Error"},
             });
         }
-    }
+}
 }
