@@ -213,10 +213,12 @@ module.exports = {
     }
   },
   deleteSafe: async (req, res) => {
+    const user = req.user;
     try {
       const deletedSafe = await Safes.destroy({
         where: {
           id: req.params.id,
+          user_id : user.id
         },
       });
 
