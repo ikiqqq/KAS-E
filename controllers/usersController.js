@@ -5,9 +5,9 @@ const jwt = require("../helpers/jwt");
 const { Op } = require("sequelize");
 const { encrypt, checkPass } = require("../helpers/bcrypt");
 const { v4: uuidv4 } = require("uuid");
-const hbs = require("nodemailer-express-handlebars");
 const nodemailer = require("nodemailer");
 const path = require("path");
+
 
 module.exports = {
     register: async(req, res) => {
@@ -228,10 +228,6 @@ module.exports = {
                 token: token,
             });
         } catch (error) {
-            console.log(
-                "🚀 ~ file: usersController.js ~ line 243 ~ login:async ~ error",
-                error
-            );
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
@@ -246,7 +242,7 @@ module.exports = {
                     email: body.email,
                 },
             });
-            console.log(user);
+            // console.log(user);
             if (!user)
                 return res.status(400).json({ msg: "This email does not exist." });
 
@@ -255,7 +251,7 @@ module.exports = {
                 email: user.dataValues.email,
                 id: user.dataValues.id,
             };
-            console.log(payload);
+            // console.log(payload);
             const token = jwt.generateToken(payload, secret);
             let transporter = nodemailer.createTransport({
                 service: "Gmail",
@@ -368,4 +364,70 @@ module.exports = {
             return res.status(500).json({ msg: err.message });
         }
     },
+
+    google: async(req, res) => {
+        let payload;
+        try {
+            const checkEmail = await Users.findOne({
+                where: {
+                    email: req.user._json.email,
+                },
+            });
+            if (checkEmail) {
+                payload = {
+                    email: checkEmail.email,
+                    id: checkEmail.id,
+                };
+            } else {
+                const user = await Users.create({
+                    email: req.user._json.email,
+                    password: "",
+                    confirmPassword: ""
+                });
+                payload = {
+                    email: user.email,
+                    id: user.id,
+                };
+            }
+            const token = jwt.generateToken(payload)
+            return res.redirect('http://localhost:5050/api/v1/user/login?token=' + token);
+        } catch (error) {
+            console.log(error),
+                res.sendStatus(500)
+        }
+    },
+
+    facebook: async(req, res) => {
+        let payload;
+        try {
+            const checkEmail = await Users.findOne({
+                where: {
+                    email: req.user._json.email,
+                },
+            });
+            if (checkEmail) {
+                payload = {
+                    email: checkEmail.email,
+                    id: checkEmail.id,
+                };
+            } else {
+                const user = await Users.create({
+                    email: req.user._json.email,
+                    password: "",
+                });
+                payload = {
+                    email: user.email,
+                    id: user.id,
+                };
+            }
+
+            jwt.generateToken(payload, "rahasia", { expiresIn: 3600 }, (err, token) => {
+                return res.redirect('localhost:5050/api/v1/user/login?token=' + token);
+            });
+        } catch (error) {
+            console.log(error),
+                res.sendStatus(500)
+        }
+    },
+
 };

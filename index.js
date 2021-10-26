@@ -5,13 +5,22 @@ const multer = require('multer');
 const form = multer()
 const jwt = require('jsonwebtoken')
 const router = require('./routes/index')
+const passport = require('./middlewares/passport')
+const session = require('cookie-session')
     //const cloudinary = require("multer-storage-cloudinary");
     //const upload = multer({ dest: 'uploads/' });
 
 const port = process.env.PORT || 5050;
 
+app.use(session({
+    name : "kas-E-cookie",
+    keys : ["secretAja", "secretkedua"]
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+
+
 app.use(cors());
-app.use(form.array())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //app.use(upload.array())

@@ -39,7 +39,7 @@ module.exports = (namaKolum) => {
 
         const upload = multer({
             storage: storage,
-        }).single(namaKolum)
+        }).single("profilePicture")
 
         return (req, res, next) => {
             upload(req, res, (err) => {

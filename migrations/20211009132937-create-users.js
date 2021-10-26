@@ -12,10 +12,12 @@ module.exports = {
                 type: Sequelize.STRING
             },
             password: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                allowNull : true
             },
             confirmPassword: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                allowNull : true
             },
             isVerified: {
                 type: Sequelize.BOOLEAN

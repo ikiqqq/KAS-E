@@ -5,7 +5,7 @@ const auth = require('../middlewares/authentication')
 const upload = require('../middlewares/profilePicture')
 
 router.get("/", auth, profiles.getUserLogin)
-router.put('/edit', auth, upload('profilePicture'), profiles.updateProfile)
+router.put('/edit/', auth, upload('profilePicture'), profiles.updateProfile)
 router.delete('/delete/:id', auth, profiles.deleteUsers)
 
 module.exports = router
