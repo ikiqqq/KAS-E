@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     };
     Categories.init({
         categoryName: DataTypes.STRING,
+        image_url: DataTypes.STRING,
+        caption: DataTypes.STRING
     }, {
         sequelize,
         modelName: "Categories",

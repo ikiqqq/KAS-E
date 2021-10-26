@@ -414,6 +414,7 @@ module.exports = {
                 const user = await Users.create({
                     email: req.user._json.email,
                     password: "",
+                    confirmPassword: ""
                 });
                 payload = {
                     email: user.email,
@@ -421,9 +422,8 @@ module.exports = {
                 };
             }
 
-            jwt.generateToken(payload, "rahasia", { expiresIn: 3600 }, (err, token) => {
-                return res.redirect('localhost:5050/api/v1/user/login?token=' + token);
-            });
+            const token = jwt.generateToken(payload)
+            return res.redirect('https://localhost:5050/api/v1/user/login?token=' + token);
         } catch (error) {
             console.log(error),
                 res.sendStatus(500)
