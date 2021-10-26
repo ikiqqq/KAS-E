@@ -60,13 +60,13 @@ module.exports = {
                 });
             }
 
-      const create = await Transactions.create({
-        user_id: user.id,
-        category_id: body.category_id,
-        safe_id: body.safe_id,
-        detailExpense: body.detailExpense,
-        expense: body.expense,
-      });
+            const create = await Transactions.create({
+                user_id: user.id,
+                category_id: body.category_id,
+                safe_id: body.safe_id,
+                detailExpense: body.detailExpense,
+                expense: body.expense,
+            });
 
             if (!create) {
                 return res.status(400).json({
@@ -115,46 +115,45 @@ module.exports = {
         let date = req.query.date;
         let where;
 
-    try {
-      if (date) {
-        if (!date.match(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/)) {
-          return res.status(400).json({
-            status: "failed",
-            message: "Date format not match",
-          });
-        }
-        let dateFrom = new Date(date);
-        let dateTo = new Date(date).setDate(new Date(date).getDate() + 1);
-        where = {
-          user_id: user.id,
-          createdAt: {
-            [Op.between]: [dateFrom, dateTo],
-          },
-        };
-      } else {
-        where = {
-          user_id: user.id,
-        };
-      }
-      const transactions = await Transactions.findAll({
-        where: where,
-        include: [
-          {
-            model: Categories,
-            as: "Categories",
-            include:[{
-              where:{
-                user_id: user.id
-              },
-              model: Limits,
-              as: "Limit"
-            }]
-          },
-          {
-            model: Safes
+        try {
+            if (date) {
+                if (!date.match(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/)) {
+                    return res.status(400).json({
+                        status: "failed",
+                        message: "Date format not match",
+                    });
+                }
+                let dateFrom = new Date(date);
+                let dateTo = new Date(date).setDate(new Date(date).getDate() + 1);
+                where = {
+                    user_id: user.id,
+                    createdAt: {
+                        [Op.between]: [dateFrom, dateTo],
+                    },
+                };
+            } else {
+                where = {
+                    user_id: user.id,
+                };
             }
-        ],
-      });
+            const transactions = await Transactions.findAll({
+                where: where,
+                include: [{
+                        model: Categories,
+                        as: "Categories",
+                        include: [{
+                            where: {
+                                user_id: user.id
+                            },
+                            model: Limits,
+                            as: "Limit"
+                        }]
+                    },
+                    {
+                        model: Safes
+                    }
+                ],
+            });
 
             if (transactions.length == 0) {
                 return res.status(404).json({
