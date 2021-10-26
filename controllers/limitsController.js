@@ -108,12 +108,12 @@ module.exports = {
         where: {
           user_id: user.id,
         },
-        // include: [
-        //   {
-        //     model: Categories,
-        //     as: "Category",
-        //   },
-        // ],
+        include: [
+          {
+            model: Categories,
+            as: "Limit",
+          },
+        ],
       });
       if (limit.length == 0) {
         return res.status(404).json({
