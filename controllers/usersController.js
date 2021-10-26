@@ -285,71 +285,37 @@ module.exports = {
         if (error) {
           return console.log(error);
         }
-        console.log("Message sent: " + info.response);
-      });
-      return res.status(200).json({
-        msg: "Re-send the password, please check your email.",
-      });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
-  resetPassword: async (req, res) => {
-    const { id } = req.params;
-    try {
-      const { password, confirmPassword } = req.body;
-      const schema = Joi.object({
-        password: Joi.string().min(6).max(12).required(),
-        confirmPassword: Joi.string().min(6).max(12).required(),
-      });
+    },
 
-      schema.validate(
-        {
-          password: password,
-          confirmPassword: confirmPassword,
-        },
-        { abortEarly: false }
-      );
-
-      //checking fields
-      if (!password || !confirmPassword) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Please enter all fields.",
-        });
-      }
-
-      //checking matching password
-      if (password !== confirmPassword) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Password Does Not Match.",
-        });
-      }
-
-      //checking password length
-      const checkLength = password.length;
-      if (checkLength < 6) {
-        return res.status(400).json({
-          status: "failed",
-          message:
-            "Password must be at least min 6 characters and max 12 characters.",
-        });
-      } else if (checkLength > 12) {
-        return res.status(400).json({
-          status: "failed",
-          message:
-            "Password must be at least min 6 characters and max 12 characters.",
-        });
-      }
-
-      const updatePassword = await Users.update(
-        {
-          password: encrypt(password),
-          confirmPassword: encrypt(confirmPassword),
-        },
-        {
-          where: { id: id },
+    google: async(req, res) => {
+        let payload;
+        try {
+            const checkEmail = await Users.findOne({
+                where: {
+                    email: req.user._json.email,
+                },
+            });
+            if (checkEmail) {
+                payload = {
+                    email: checkEmail.email,
+                    id: checkEmail.id,
+                };
+            } else {
+                const user = await Users.create({
+                    email: req.user._json.email,
+                    password: "",
+                    confirmPassword: ""
+                });
+                payload = {
+                    email: user.email,
+                    id: user.id,
+                };
+            }
+            const token = jwt.generateToken(payload)
+            return res.redirect('http://localhost:5050/api/v1/user/login?token=' + token);
+        } catch (error) {
+            console.log(error),
+                res.sendStatus(500)
         }
       );
 
