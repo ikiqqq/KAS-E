@@ -49,7 +49,11 @@ module.exports = {
   },
   getCategory: async (req, res) => {
     try {
-      const category = await Categories.findAll();
+      const category = await Categories.findAll({
+        order: [
+          ['id', 'ASC'],
+      ],
+      });
       if (category.length==0) {
         return res.status(404).json({
           status: "failed",
