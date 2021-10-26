@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const { Categories } = require("../models");
+const path = require("path");
 
 module.exports = {
   postCategory: async (req, res) => {
@@ -77,12 +78,14 @@ module.exports = {
     const body = req.body;
     try {
       const schema = Joi.object({
-        categoryName: Joi.string().required()
+        categoryName: Joi.string(),
+        image_url: Joi.string()
       });
 
       const { error } = schema.validate(
         {
-          categoryName: body.categoryName
+          categoryName: body.categoryName,
+          image_url: req.file ? req.file.path : "image_url"
         },
         { abortEarly: false }
       );
@@ -96,7 +99,10 @@ module.exports = {
       }
 
       const updatedCategory = await Categories.update(
-        { ...body },
+        {
+          categoryName: body.categoryName,
+          [req.file ? "image_url" : null]: req.file ? req.file.path : null
+        },
         {
           where: {
             id: req.params.id,
