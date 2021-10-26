@@ -6,8 +6,8 @@ module.exports = {
   postCategory: async (req, res) => {
     const body = req.body;
     try {
-      const schema = Joi.object({
-        categoryName: Joi.string().required(),
+        const schema = Joi.object({
+          categoryName: Joi.string().required(),
       });
 
       const { error } = schema.validate(

@@ -1,8 +1,7 @@
 const Joi = require("joi");
-const { Limits } = require("../models");
-const { Categories } = require("../models");
-const jwt = require("../helpers/jwt");
-const {getUserData} = require("../helpers/jwt")
+const { Limits, Categories } = require("../models");
+// const jwt = require("../helpers/jwt");
+// const {getUserData} = require("../helpers/jwt")
 
 module.exports = {
   postLimit: async (req, res) => {
@@ -136,8 +135,9 @@ module.exports = {
   },
   updateLimit: async (req, res) => {
     const body = req.body;
-    const userData = getUserData(req.headers.token);
-    const userId = userData.id;
+    // const userData = getUserData(req.headers.token);
+    const user = req.user;
+    console.log(user)
     try {
       const schema = Joi.object({
         category_id: Joi.number(),
@@ -161,10 +161,13 @@ module.exports = {
       }
 
       const updatedLimit = await Limits.update(
-        { ...body },
+        { 
+          limit: body.limit 
+        },
         {
           where: {
-            user_id: userId,
+            user_id: user.id,
+            category_id: body.category_id
           },
         }
       );
@@ -178,7 +181,8 @@ module.exports = {
 
       const data = await Limits.findOne({
         where: {
-          user_id: userId,
+          user_id: user.id,
+          category_id: body.category_id
         },
       });
 
