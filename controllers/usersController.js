@@ -168,20 +168,20 @@ module.exports = {
                 message: "Internal server error",
             });
         }
-      );
-      res.status(200).json({
-        status: "success",
-        message: "Verification account success",
-        data: verify,
-      });
+    //   );
+    //   res.status(200).json({
+    //     status: "success",
+    //     message: "Verification account success",
+    //     data: verify,
+    //   });
 
-      return res.redirect("/user/login");
-    } catch (error) {
-      return res.status(500).json({
-        status: "failed",
-        message: "Internal server error",
-      });
-    }
+    //   return res.redirect("/user/login");
+    // } catch (error) {
+    //   return res.status(500).json({
+    //     status: "failed",
+    //     message: "Internal server error",
+    //   });
+    // }
   },
   login: async (req, res) => {
     const body = req.body;
