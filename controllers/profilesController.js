@@ -77,48 +77,48 @@ module.exports = {
         });
       }
 
-      // if (body.password) {
-      //   const oldPass = await Users.findOne({
-      //     where: {
-      //       id: user.id,
-      //     },
-      //   });
+      if (body.password) {
+        const oldPass = await Users.findOne({
+          where: {
+            id: user.id,
+          },
+        });
 
-      //   const checkPassword = checkPass(
-      //     body.password,
-      //     oldPass.dataValues.password
-      //   );
+        const checkPassword = checkPass(
+          body.password,
+          oldPass.dataValues.password
+        );
 
-      //   if (checkPassword) {
-      //     return res.status(400).json({
-      //       status: "fail",
-      //       message: "Password already used before, please use new password",
-      //     });
-      //   }
+        if (checkPassword) {
+          return res.status(400).json({
+            status: "fail",
+            message: "Password already used before, please use new password",
+          });
+        }
 
-      //   const hashedPassword = encrypt(body.password);
+        const hashedPassword = encrypt(body.password);
 
-      //   await Users.update(
-      //     { password: hashedPassword },
-      //     { where: { id: user.id } }
-      //   );
-      // }
+        await Users.update(
+          { password: hashedPassword },
+          { where: { id: user.id } }
+        );
+      }
 
-      // const userUpdate = await Users.update(
-      //   {
-      //     email: body.email,
-      //     password: body.password,
-      //   },
-      //   {
-      //     where: { id: user.id },
-      //   }
-      // );
-      // if (!userUpdate[0]) {
-      //   return res.status(400).json({
-      //     status: "failed",
-      //     message: "Unable to input data",
-      //   });
-      // }
+      const userUpdate = await Users.update(
+        {
+          email: body.email,
+          password: body.password,
+        },
+        {
+          where: { id: user.id },
+        }
+      );
+      if (!userUpdate) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Unable to input data",
+        });
+      }
 
       const profileUpdate = await Profiles.update(
         {
@@ -136,7 +136,7 @@ module.exports = {
       );
       console.log(profileUpdate)
 
-      if (!profileUpdate[0]) {
+      if (!profileUpdate) {
         return res.status(400).json({
           status: "failed",
           message: "Unable to input data",
