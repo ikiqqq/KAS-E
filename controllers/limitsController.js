@@ -197,6 +197,7 @@ module.exports = {
   },
   deleteLimit: async (req, res) => {
     const user = req.user;
+    const body= req.body
     try {
       const check = await Limits.destroy({
         where: {
