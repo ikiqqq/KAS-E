@@ -196,12 +196,11 @@ module.exports = {
     }
   },
   deleteLimit: async (req, res) => {
-    const id = req.params.id;
     const user = req.user;
     try {
       const check = await Limits.destroy({
         where: {
-          category_id: id,
+          category_id: body.category_id,
           user_id: user.id
         },
       });
