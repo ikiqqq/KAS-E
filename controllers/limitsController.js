@@ -205,6 +205,7 @@ module.exports = {
           user_id: user.id
         },
       });
+      console.log(user)
       if (!check) {
         return res.status(400).json({
           status: "failed",
