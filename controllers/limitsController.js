@@ -6,8 +6,7 @@ const { Limits, Categories } = require("../models");
 module.exports = {
   postLimit: async (req, res) => {
     const body = req.body;
-    const token = req.header("Authorization").replace("Bearer ", "")
-    const user = jwt.getUserData(token)
+    const user = req.user
     try {
       const schema = Joi.object({
         category_id: Joi.number().required(),
@@ -29,18 +28,18 @@ module.exports = {
           errors: error["details"][0]["message"],
         });
       }
-      // const isExist=await Limits.findOne({
-      //   where:{
-      //     user_id: user.id
-      //     // category_id: body.category_id
-      //   }
-      // })
-      // if(!isExist){
-      //   return res.status(400).json({
-      //     status: "failed",
-      //     message: "User not found",
-      //   });
-      // }
+      const isExist=await Limits.findOne({
+        where:{
+          user_id: user.id,
+          category_id: body.category_id
+        }
+      })
+      if(isExist){
+        return res.status(400).json({
+          status: "failed",
+          message: "already has this limit",
+        });
+      }
       const check = await Limits.create({
         category_id: body.category_id,
         user_id: user.id,
@@ -100,9 +99,8 @@ module.exports = {
     }
   },
   getLimit: async (req, res) => {
+    const user = req.user
     try {
-      const token = req.header("Authorization").replace("Bearer ", "")
-      const user = req.user
       const limit = await Limits.findAll({
         where: {
           user_id: user.id,
@@ -136,9 +134,7 @@ module.exports = {
   },
   updateLimit: async (req, res) => {
     const body = req.body;
-    // const userData = getUserData(req.headers.token);
     const user = req.user;
-    console.log(user)
     try {
       const schema = Joi.object({
         category_id: Joi.number(),
@@ -201,13 +197,12 @@ module.exports = {
   },
   deleteLimit: async (req, res) => {
     const id = req.params.id;
-    const userData = getUserData(req.headers.token);
-    const userId = userData.id;
+    const user = req.user;
     try {
       const check = await Limits.destroy({
         where: {
           category_id: id,
-          user_id: userId
+          user_id: user.id
         },
       });
       if (!check) {
