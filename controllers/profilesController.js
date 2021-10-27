@@ -1,6 +1,8 @@
 const { Profiles, Users } = require("../models");
 const Joi = require("joi");
-const { checkPass, encrypt } = require("../helpers/bcrypt");
+// const { checkPass, encrypt } = require("../helpers/bcrypt");
+// const path = require("path");
+// const { profile } = require("console");
 
 module.exports = {
   getUserLogin: async (req, res) => {
@@ -42,7 +44,7 @@ module.exports = {
   updateProfile: async (req, res) => {
     const body = req.body;
     const user = req.user;
-    console.log(req.file);
+    console.log(user.id)
     try {
       const schema = Joi.object({
         user_id: Joi.number(),
@@ -75,42 +77,48 @@ module.exports = {
         });
       }
 
-      if (body.password) {
-        const oldPass = await Users.findOne({
-          where: {
-            id: user.id,
-          },
-        });
+      // if (body.password) {
+      //   const oldPass = await Users.findOne({
+      //     where: {
+      //       id: user.id,
+      //     },
+      //   });
 
-        const checkPassword = checkPass(
-          body.password,
-          oldPass.dataValues.password
-        );
+      //   const checkPassword = checkPass(
+      //     body.password,
+      //     oldPass.dataValues.password
+      //   );
 
-        if (checkPassword) {
-          return res.status(400).json({
-            status: "fail",
-            message: "Password already used before, please use new password",
-          });
-        }
+      //   if (checkPassword) {
+      //     return res.status(400).json({
+      //       status: "fail",
+      //       message: "Password already used before, please use new password",
+      //     });
+      //   }
 
-        const hashedPassword = encrypt(body.password);
+      //   const hashedPassword = encrypt(body.password);
 
-        await Users.update(
-          { password: hashedPassword },
-          { where: { id: user.id } }
-        );
-      }
+      //   await Users.update(
+      //     { password: hashedPassword },
+      //     { where: { id: user.id } }
+      //   );
+      // }
 
-      const userUpdate = await Users.update(
-        {
-          email: body.email,
-          password: body.password,
-        },
-        {
-          where: { id: user.id },
-        }
-      );
+      // const userUpdate = await Users.update(
+      //   {
+      //     email: body.email,
+      //     password: body.password,
+      //   },
+      //   {
+      //     where: { id: user.id },
+      //   }
+      // );
+      // if (!userUpdate[0]) {
+      //   return res.status(400).json({
+      //     status: "failed",
+      //     message: "Unable to input data",
+      //   });
+      // }
 
       const profileUpdate = await Profiles.update(
         {
@@ -119,17 +127,16 @@ module.exports = {
           age: body.age,
           [req.file ? "profilePicture" : null]: req.file ? req.file.path : null,
         },
-        { where: { user_id: user.id } }
+        { 
+          where: 
+          { 
+            user_id: user.id 
+          },
+        }
       );
+      console.log(profileUpdate)
 
-      if (!userUpdate) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Unable to input data",
-        });
-      }
-
-      if (!profileUpdate) {
+      if (!profileUpdate[0]) {
         return res.status(400).json({
           status: "failed",
           message: "Unable to input data",
@@ -138,22 +145,18 @@ module.exports = {
 
       const data = await Profiles.findOne({
         where: { user_id: user.id },
-        include: {
-          model: Users,
-          attributes: ["id", "email"],
-        },
+        // include: {
+        //   model: Users,
+        //   attributes: ["id", "email"],
+        // },
       });
 
       return res.status(200).json({
         status: "success",
         message: "Succesfully update the data",
-        data: { data },
+        data: data,
       });
     } catch (error) {
-      console.log(
-        "🚀 ~ file: profilesController.js ~ line 135 ~ updateProfile:async ~ error",
-        error
-      );
       return res.status(500).json({
         status: "failed",
         message: "Internal Server Error",
