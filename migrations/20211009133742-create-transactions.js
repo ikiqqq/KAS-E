@@ -23,6 +23,9 @@ module.exports = {
       expense: {
         type: Sequelize.INTEGER
       },
+      type: {
+        type: Sequelize.ENUM('expense', 'addIncome')
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

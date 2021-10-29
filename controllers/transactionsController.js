@@ -262,4 +262,72 @@ deleteTransaction: async(req, res) => {
             });
         }
 },
+
+// tambahan jihad
+postAddIncome: async(req, res) => {
+    const user = req.user;
+    const body = req.body;
+
+    try {
+        const schema = Joi.object({
+            user_id: Joi.number().required(),
+            safe_id: Joi.number().required(),
+            expense: Joi.number().required(),
+        });
+
+        const { error } = schema.validate({
+            user_id: user.id,
+            safe_id: body.safe_id,
+            expense: body.expense,
+        }, { abortEarly: false });
+
+        if (error) {
+            return res.status(400).json({
+                status: "failed",
+                message: "Bad Request",
+                errors: error["details"][0]["message"],
+            });
+        }
+
+        const safe = await Safes.findOne({
+            where: {
+                id: body.safe_id,
+                user_id: user.id
+            }
+        });
+
+        if (!safe) {
+            return res.status(404).json({
+                status: "failed",
+                message: "Safe not found",
+            });
+        }
+
+        const create = await Transactions.create({
+            user_id: user.id,
+            safe_id: body.safe_id,
+            expense: body.expense,
+            type: 'addIncome',
+        });
+
+        if (!create) {
+            return res.status(400).json({
+                status: "failed",
+                message: "Unable to save add income to database",
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Successfully saved add income to database",
+            data: { create },
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({
+            status: "failed",
+            message: "Internal server error",
+        });
+    }
+},
 };

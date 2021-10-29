@@ -1,47 +1,54 @@
 const { Transactions } = require("../models");
 const sequelize = require("sequelize");
 
-
-module.exports = {
 // Daily Report
-getDaily: async (req, res) => {
+module.exports = {
+    getDaily: async (req, res) => {
         const user = req.user;
         try {
-            const transaction = await Transactions.findAll({
-                where: { user_id: user.id },
+            const expense = await Transactions.findAll({
+                where: { user_id: user.id, type: 'expense' },
                 attributes: [
                     [sequelize.fn("DATE", sequelize.col("createdAt")), "date"],
                     [sequelize.fn("sum", sequelize.col("expense")), "totalExpense"],
                     [sequelize.fn("count", sequelize.col("id")), "count"],
                 ],
                 group: ["date"],
-                // include: [{
-                //     model: Limits,
-                //     as: 'Limit',
-                //     include: {
-                //         model: Categories,
-                //         as: "Category"
-                //     }
-                // },
-                //     {
-                //         model: Safes
-                //     }
-                // ],
             });
 
-            if (!transaction) {
+            if (!expense) {
             return res.status(404).json({
                 status: "failed",
                 message: "transaction not found",
-                data: transaction,
+                data: expense,
+            });
+            }
+
+            const addIncome = await Transactions.findAll({
+                where: { user_id: user.id, type: 'addIncome' },
+                attributes: [
+                    [sequelize.fn("DATE", sequelize.col("createdAt")), "date"],
+                    [sequelize.fn("sum", sequelize.col("expense")), "totalAddIncome"],
+                    [sequelize.fn("count", sequelize.col("id")), "count"],
+                ],
+                group: ["date"],
+            });
+
+            if (!addIncome) {
+            return res.status(404).json({
+                status: "failed",
+                message: "transaction not found",
+                data: addIncome,
             });
             }
 
             return res.status(200).json({
                 status: "success",
                 message: "daily report transaction retrieved successfully",
-                data: transaction,
+                expense: expense, 
+                addIncome: addIncome
             });
+
         } catch (error) {
             console.log(error);
             res.status(500).json({
@@ -51,13 +58,14 @@ getDaily: async (req, res) => {
                 },
             });
         }
-},
-// Monthly Report
-getMonthly: async (req, res) => {
+    },
+
+    // Monthly Report
+    getMonthly: async (req, res) => {
         const user = req.user;
         try {
-            const transaction = await Transactions.findAll({
-            where: { user_id: user.id },
+            const expense = await Transactions.findAll({
+            where: { user_id: user.id, type: 'expense' },
             attributes: [
                 [sequelize.fn("date_trunc","MONTH", sequelize.col("createdAt")), "Month"],
                 [sequelize.fn("sum", sequelize.col("expense")), "totalExpense"],
@@ -66,7 +74,7 @@ getMonthly: async (req, res) => {
             group: ["Month"],
             });
 
-            if (!transaction) {
+            if (!expense) {
                 return res.status(404).json({
                     status: "failed",
                     message: "Transaction not found"
@@ -74,10 +82,21 @@ getMonthly: async (req, res) => {
                 });
             }
 
+            const addIncome = await Transactions.findAll({
+                where: { user_id: user.id, type: 'addIncome' },
+                attributes: [
+                    [sequelize.fn("date_trunc","MONTH", sequelize.col("createdAt")), "Month"],
+                    [sequelize.fn("sum", sequelize.col("expense")), "totalAddIncome"],
+                    [sequelize.fn("count", sequelize.col("id")), "count"],
+                ],
+                group: ["Month"],
+                });
+
             return res.status(200).json({
                 status: "success",
                 message: "Monthly report transaction retrieved successfully",
-                data: transaction,
+                expense: expense, 
+                addIncome: addIncome
             });
         } catch (error) {
             console.log(error);
@@ -86,5 +105,5 @@ getMonthly: async (req, res) => {
                 error: { message: "Internal Server Error"},
             });
         }
-}
+    }
 }
