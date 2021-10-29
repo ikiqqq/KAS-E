@@ -23,10 +23,10 @@ module.exports = {
         "use_env_variable": "DATABASE_URL",
         "protocol": "postgres",
         "dialect": "postgres",
-        "dialectOptions":{
-          "ssl":{
-            "rejectUnauthorized": false 
-          }     
+        "dialectOptions": {
+            "ssl": {
+                "rejectUnauthorized": false
+            }
         }
-      }
+    }
 }
