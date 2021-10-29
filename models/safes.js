@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
   
     user_id: DataTypes.INTEGER,
     safeName: DataTypes.STRING,
-    amount: DataTypes.INTEGER
+    amount: DataTypes.INTEGER,
+    openingBalance: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Safes'

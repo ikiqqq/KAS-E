@@ -44,3 +44,12 @@ if (newLimit < 0) {
         data: newLimit
     })
 }
+
+const expense = await Transactions.findAll({
+    where: { user_id: user.id, type: 'expense' },
+    attributes: ['category_id', [sequelize.fn("sum", sequelize.col("expense")), "totalExpense"], ],
+    group: ["category_id"],
+});
+console.log("🚀 ~ file: transactionsController.js ~ line 220 ~ getAllTransaction:async ~ expense", expense)
+console.log(expense, "========")
+    // if (expense.dataValues.totalExpense)

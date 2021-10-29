@@ -1,9 +1,10 @@
 const { Users, Limits, Safes, Transactions, Categories } = require("../models");
 const Joi = require("joi");
 const { Op } = require("sequelize");
+const sequelize = require('sequelize')
 
 module.exports = {
-postTransaction: async(req, res) => {
+    postTransaction: async(req, res) => {
         const user = req.user;
         const body = req.body;
 
@@ -66,6 +67,7 @@ postTransaction: async(req, res) => {
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
                 expense: body.expense,
+                type: 'expense'
             });
 
             if (!create) {
@@ -75,11 +77,52 @@ postTransaction: async(req, res) => {
                 });
             }
 
+            // to count all transaction type expense -> hitung pengeluaran
+            const expense = await Transactions.findAll({
+                where: {
+                    user_id: user.id,
+                    type: 'expense'
+                }
+            });
+
+            let allExpenses = expense.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumExpense = allExpenses.reduce((a, b) => a + b)
+
+            //to count all transaction type addIncome -> hitung addIncome
+            const addIncome = await Transactions.findAll({
+                where: {
+                    user_id: user.id,
+                    type: 'addIncome'
+                }
+            })
+
+            const allAddIncomes = addIncome.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumIncome = allAddIncomes.reduce((a, b) => a + b)
+
+            //hitung nilai safe baru
+            const newSafe = safe.openingBalance + sumIncome - sumExpense
+
+            //update nilai safe
+            const updateSafe = await Safes.update({
+                amount: newSafe
+            }, {
+                where: {
+                    user_id: user.id
+                }
+            })
+
+
             const findLimit = await Transactions.findAll({
                 where: {
                     category_id: body.category_id,
                     user_id: user.id,
-                },
+                }
             });
 
             let limitTransaction = findLimit.map((e) => {
@@ -92,15 +135,19 @@ postTransaction: async(req, res) => {
 
             if (newLimit < 0) {
                 return res.status(201).json({ //warning
-                    message: "Over limit ",
-                    data: newLimit,
+                    status: 'success',
+                    message: `Over limit ${newLimit}`,
+                    data: { create },
+                    // newLimit
+                });
+            } else {
+                return res.status(200).json({
+                    status: "success",
+                    message: "Successfully saved data to database",
+                    data: { create },
                 });
             }
-            return res.status(200).json({
-                status: "success",
-                message: "Successfully saved data to database",
-                data: { create },
-            });
+
         } catch (error) {
             console.log(error.message);
             return res.status(500).json({
@@ -108,8 +155,8 @@ postTransaction: async(req, res) => {
                 message: "Internal server error",
             });
         }
-},
-getAllTransaction: async(req, res) => {
+    },
+    getAllTransaction: async(req, res) => {
         const user = req.user;
         let date = req.query.date;
         let where;
@@ -166,7 +213,7 @@ getAllTransaction: async(req, res) => {
                 message: "Successfully retrieved data transactions",
                 data: {
                     transactions,
-                },
+                }
             });
         } catch (error) {
             console.log(error.message)
@@ -175,8 +222,8 @@ getAllTransaction: async(req, res) => {
                 message: "Internal Server Error",
             });
         }
-},
-updateTransaction: async(req, res) => {
+    },
+    updateTransaction: async(req, res) => {
         const user = req.user;
         const body = req.body;
         const id = req.params.id;
@@ -231,12 +278,36 @@ updateTransaction: async(req, res) => {
                 message: "Internal server error",
             });
         }
-},
-deleteTransaction: async(req, res) => {
+    },
+    deleteTransaction: async(req, res) => {
         const user = req.user;
         const id = req.params.id;
 
         try {
+
+            const transaction = await Transactions.findOne({
+                where: {
+                    id,
+                    user_id: user.id
+                }
+            })
+
+            const safe = await Safes.findOne({
+                where: {
+                    user_id: user.id
+                }
+            });
+
+            const sum = safe.dataValues.amount + transaction.dataValues.expense
+
+            const updateSafe = await Safes.update({
+                amount: sum
+            }, {
+                where: {
+                    user_id: user.id
+                }
+            })
+
             const check = await Transactions.destroy({
                 where: {
                     user_id: user.id,
@@ -261,5 +332,109 @@ deleteTransaction: async(req, res) => {
                 message: "Internal server error",
             });
         }
-},
+    },
+
+    // tambahan jihad
+    postAddIncome: async(req, res) => {
+        const user = req.user;
+        const body = req.body;
+
+        try {
+            const schema = Joi.object({
+                user_id: Joi.number().required(),
+                safe_id: Joi.number().required(),
+                expense: Joi.number().required(),
+            });
+
+            const { error } = schema.validate({
+                user_id: user.id,
+                safe_id: body.safe_id,
+                expense: body.expense,
+            }, { abortEarly: false });
+
+            if (error) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Bad Request",
+                    errors: error["details"][0]["message"],
+                });
+            }
+
+            const safe = await Safes.findOne({
+                where: {
+                    id: body.safe_id,
+                    user_id: user.id
+                }
+            });
+
+            if (!safe) {
+                return res.status(404).json({
+                    status: "failed",
+                    message: "Safe not found",
+                });
+            }
+
+            const create = await Transactions.create({
+                user_id: user.id,
+                safe_id: body.safe_id,
+                expense: body.expense,
+                type: 'addIncome',
+            });
+
+            if (!create) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Unable to save add income to database",
+                });
+            }
+
+            const expense = await Transactions.findAll({
+                where: {
+                    user_id: user.id,
+                    type: 'expense'
+                }
+            });
+
+            let allExpenses = expense.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumExpense = allExpenses.reduce((a, b) => a + b)
+
+            const addIncome = await Transactions.findAll({
+                where: {
+                    user_id: user.id,
+                    type: 'addIncome'
+                }
+            })
+
+            const allAddIncomes = addIncome.map(e => {
+                return e.dataValues.expense
+            });
+
+            const sumIncome = allAddIncomes.reduce((a, b) => a + b)
+
+            const update = safe.openingBalance + sumIncome - sumExpense
+
+            const updateSafe = await Safes.update({
+                amount: update
+            }, {
+                where: {
+                    user_id: user.id
+                }
+            })
+
+            return res.status(200).json({
+                status: "success",
+                message: "Successfully saved add income to database",
+                data: { create },
+            });
+        } catch (error) {
+            console.log(error.message);
+            return res.status(500).json({
+                status: "failed",
+                message: "Internal server error",
+            });
+        }
+    },
 };
