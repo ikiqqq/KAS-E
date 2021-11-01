@@ -402,7 +402,7 @@ google: async(req, res) => {
             };
         }
         const token = jwt.generateToken(payload)
-            return res.redirect('http://localhost:5050/api/v1/user/login?token=' + token);
+            return res.redirect('http://kas-e.herokuapp.com/api/v1/profile/loading/?token=' + token);
         } catch (error) {
           console.log(error),
           res.sendStatus(500)
@@ -434,7 +434,7 @@ facebook: async (req, res) => {
       }
 
       const token = jwt.generateToken (payload)
-        return  res.redirect('https://localhost:5050/api/v1/user/login?token='+ token);
+        return  res.redirect('https://kas-e.herokuapp.com/api/v1/profile/loading/?token=' + token);
     } catch (error) {
       console.log(error),
       res.sendStatus(500)
