@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const cors = require('cors');
 const multer = require('multer');
-const form = multer()
 const jwt = require('jsonwebtoken')
 const router = require('./routes/index')
 const passport = require('./middlewares/passport')
@@ -21,7 +20,6 @@ app.use(passport.session())
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(form.any())
 app.use('/api/v1', router)
 app.use((error, req, res, next) => {
     console.log('This is the rejected field ->', error.field);

@@ -2,8 +2,10 @@ const express = require('express')
 const router = express.Router()
 const users = require('../controllers/usersController')
 const passport = require("../middlewares/passport");
+const multer = require('multer');
+const form = multer()
 
-router.post("/login", users.login)
+router.post("/login", form.any(), users.login)
 router.post("/register", users.register)
 router.get("/verify", users.verifyEmail)
 router.post('/forgot', users.forgotPassword)
