@@ -1,6 +1,6 @@
 const { Profiles, Users } = require("../models");
 const Joi = require("joi");
-// const { checkPass, encrypt } = require("../helpers/bcrypt");
+const { checkPass, encrypt } = require("../helpers/bcrypt");
 // const path = require("path");
 // const { profile } = require("console");
 
