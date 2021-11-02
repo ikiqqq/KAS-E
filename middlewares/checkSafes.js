@@ -14,7 +14,7 @@ module.exports = async(req, res, next) => {
         })
 
         if (!check) {
-            return res.status(400).json({
+            return res.status(200).json({
                 status: 'failed',
                 message: 'You dont have safe yet',
                 data: null
