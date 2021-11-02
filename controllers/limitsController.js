@@ -11,12 +11,14 @@ module.exports = {
       const schema = Joi.object({
         category_id: Joi.number().required(),
         limit: Joi.number().required(),
+        safe_id: Joi.number().required()
       });
 
       const { error } = schema.validate(
         {
           category_id: body.category_id,
           limit: body.limit,
+          safe_id: body.safe_id
         },
         { abortEarly: false }
       );
@@ -31,7 +33,8 @@ module.exports = {
       const isExist=await Limits.findOne({
         where:{
           user_id: user.id,
-          category_id: body.category_id
+          category_id: body.category_id,
+          safe_id: body.safe_id
         }
       })
       if(isExist){
@@ -44,6 +47,7 @@ module.exports = {
         category_id: body.category_id,
         user_id: user.id,
         limit: body.limit,
+        safe_id: body.safe_id
       });
 
       if (!check) {
