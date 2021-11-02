@@ -6,7 +6,7 @@ const multer = require('multer');
 const form = multer()
 
 router.post("/login", form.any(), users.login)
-router.post("/register", users.register)
+router.post("/register", form.any(), users.register)
 router.get("/verify", users.verifyEmail)
 router.post('/forgot', users.forgotPassword)
 router.put('/reset-password/:id/:token', users.resetPassword)
