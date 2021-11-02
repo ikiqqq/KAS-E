@@ -1,8 +1,7 @@
 const { Profiles, Users } = require("../models");
 const Joi = require("joi");
 const { checkPass, encrypt } = require("../helpers/bcrypt");
-// const path = require("path");
-// const { profile } = require("console");
+const path = require("path");
 
 module.exports = {
   getUserLogin: async (req, res) => {
@@ -107,7 +106,7 @@ module.exports = {
       const userUpdate = await Users.update(
         {
           email: body.email,
-          password: body.password,
+          // password: body.password,
         },
         {
           where: { id: user.id },
