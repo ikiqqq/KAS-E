@@ -8,7 +8,7 @@ const form = multer()
 router.post("/login", form.any(), users.login)
 router.post("/register", form.any(), users.register)
 router.get("/verify", users.verifyEmail)
-router.post('/forgot', users.forgotPassword)
+router.post('/forgot', form.any(), users.forgotPassword)
 router.put('/reset-password/:id/:token', users.resetPassword)
 router.get("/login/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/failed", (req, res)=> res.send("You failed to login, please try again."))
