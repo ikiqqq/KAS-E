@@ -35,7 +35,8 @@ module.exports = {
         if (safe) {
           return res.status(200).json({
             success: true,
-            message: "Successfully created safe"
+            message: "Successfully created safe",
+            data: safe,
           });
         } else {
           return res.status(401).json({ 
