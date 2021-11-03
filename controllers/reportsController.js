@@ -156,21 +156,21 @@ module.exports = {
       if (expense.length == 0 && addIncome.length == 0) {
         return res.status(200).json({
           status: "success",
-          message: "daily report transaction retrieved successfully",
+          message: "Monthly report transaction retrieved successfully",
           expense: "No expenses this month",
           addIncome: "No incomes this month",
         });
       } else if (expense.length == 0) {
         return res.status(200).json({
           status: "success",
-          message: "daily report transaction retrieved successfully",
+          message: "Monthly report transaction retrieved successfully",
           expense: "No expenses this month",
           addIncome: addIncome,
         });
       } else if (addIncome.length == 0) {
         return res.status(200).json({
           status: "success",
-          message: "daily report transaction retrieved successfully",
+          message: "Monthly report transaction retrieved successfully",
           expense: expense,
           addIncome: "No incomes this month",
         });
