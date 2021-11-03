@@ -7,6 +7,9 @@ module.exports = {
     const user = req.user;
     let date = req.query.date;
     try {
+      if (date == null) {
+        date = new Date();
+      }
       const expense = await Transactions.findAll({
         where: {
           user_id: user.id,
@@ -59,17 +62,23 @@ module.exports = {
           data: addIncome,
         });
       }
-      if (expense.length == 0) {
-        res.status(200).json({
+
+      if (expense.length == 0 && addIncome.length == 0) {
+        return res.status(200).json({
+          status: "success",
+          message: "daily report transaction retrieved successfully",
+          expense: "No expenses today",
+          addIncome: "No incomes today",
+        });
+      } else if (expense.length == 0) {
+        return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
           expense: "No expenses today",
           addIncome: addIncome,
         });
-      }
-
-      if (addIncome.length == 0) {
-        res.status(200).json({
+      } else if (addIncome.length == 0) {
+        return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
           expense: expense,
@@ -98,6 +107,9 @@ module.exports = {
     const user = req.user;
     let date = req.query.date;
     try {
+      if (date == null) {
+        date = new Date();
+      }
       const expense = await Transactions.findAll({
         where: {
           user_id: user.id,
@@ -115,8 +127,6 @@ module.exports = {
           },
         ],
       });
-      const month = new Date(expense.createdAt).getMonth() + 1;
-      console.log(month);
 
       if (!expense) {
         return res.status(404).json({
@@ -143,17 +153,22 @@ module.exports = {
           attributes: ["safeName", "openingBalance"],
         },
       });
-      if (expense.length == 0) {
-        res.status(200).json({
+      if (expense.length == 0 && addIncome.length == 0) {
+        return res.status(200).json({
+          status: "success",
+          message: "daily report transaction retrieved successfully",
+          expense: "No expenses this month",
+          addIncome: "No incomes this month",
+        });
+      } else if (expense.length == 0) {
+        return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
           expense: "No expenses this month",
           addIncome: addIncome,
         });
-      }
-
-      if (addIncome.length == 0) {
-        res.status(200).json({
+      } else if (addIncome.length == 0) {
+        return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
           expense: expense,
