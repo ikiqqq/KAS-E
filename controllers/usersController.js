@@ -103,7 +103,7 @@ module.exports = {
         //   path: "./attachments/pic.jpeg" },
         // ],
         context: {
-          url: `http://kas-e.herokuapp.com/api/v1/user/verify?email=${user.email}&verifCode=${user.verifCode}`,
+          url: `https://kas-e.herokuapp.com/api/v1/user/verify?email=${user.email}&verifCode=${user.verifCode}`,
         },
       };
       transporter.sendMail(mailOptions, function (error, info) {
@@ -281,7 +281,7 @@ module.exports = {
         subject: "[Kas-E] Your Forgotton Password",
         template: "reset",
         context: {
-          url: `http://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
+          url: `https://kas-e.herokuapp.com/api/v1/user/reset-password/${user.id}/${token}`,
         },
       };
       transporter.sendMail(mailOptions, function (error, info) {
@@ -404,7 +404,7 @@ module.exports = {
         };
       }
       const token = jwt.generateToken(payload);
-      return res.redirect("http://kas-e.herokuapp.com/profile/?token=" + token);
+      return res.redirect("https://kas-e.herokuapp.com/api/v1/user/login?token=" + token);
     } catch (error) {
       console.log(error), res.sendStatus(500);
     }
@@ -435,9 +435,7 @@ module.exports = {
       }
 
       const token = jwt.generateToken(payload);
-      return res.redirect(
-        "https://kas-e.herokuapp.com/api/v1/profile/?token=" + token
-      );
+      return res.redirect("https://kas-e.herokuapp.com/api/v1/user/login?token=" + token);
     } catch (error) {
       console.log(error), res.sendStatus(500);
     }
