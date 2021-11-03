@@ -24,7 +24,7 @@ module.exports = async(req, res, next) => {
         const month = new Date(check.createdAt).getMonth() + 1
         const now = new Date().getMonth() + 1
         if (month !== now) {
-            return res.status(400).json({
+            return res.status(200).json({
                 status: 'failed',
                 message: 'Create your safe first',
                 data: null

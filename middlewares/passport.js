@@ -28,7 +28,8 @@ passport.use(
     {
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_AUTH_URI
+      callbackURL: process.env.FACEBOOK_AUTH_URI,
+      enableProof: true
     },
     function (accessToken, refreshToken, profile, cb) {
       return cb(null, profile);

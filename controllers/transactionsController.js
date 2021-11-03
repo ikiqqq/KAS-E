@@ -49,6 +49,7 @@ module.exports = {
 
             const limit = await Limits.findOne({
                 where: {
+                    safe_id: body.safe_id,
                     category_id: body.category_id,
                     user_id: user.id,
                 }
