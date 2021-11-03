@@ -82,6 +82,7 @@ module.exports = {
             const expense = await Transactions.findAll({
                 where: {
                     user_id: user.id,
+                    safe_id: body.safe_id,
                     type: 'expense'
                 }
             });
@@ -90,12 +91,18 @@ module.exports = {
                 return e.dataValues.expense
             });
 
-            const sumExpense = allExpenses.reduce((a, b) => a + b)
+            let sumExpense;
+            if (allExpenses.length == 1) {
+                sumExpense = allExpenses[0]
+            } else if (allExpenses.length > 1) {
+                sumExpense = allExpenses.reduce((a, b) => a + b)
+            }
 
             //to count all transaction type addIncome -> hitung addIncome
             const addIncome = await Transactions.findAll({
                 where: {
                     user_id: user.id,
+                    safe_id: body.safe_id,
                     type: 'addIncome'
                 }
             })
@@ -104,7 +111,14 @@ module.exports = {
                 return e.dataValues.expense
             });
 
-            const sumIncome = allAddIncomes.reduce((a, b) => a + b)
+            let sumIncome;
+            if (allAddIncomes.length == 0) {
+                sumIncome = 0
+            } else if (allAddIncomes.length == 1) {
+                sumIncome = allAddIncomes[0]
+            } else if (allAddIncomes.length > 1) {
+                sumIncome = allAddIncomes.reduce((a, b) => a + b)
+            }
 
             //hitung nilai safe baru
             const newSafe = safe.openingBalance + sumIncome - sumExpense
@@ -114,6 +128,7 @@ module.exports = {
                 amount: newSafe
             }, {
                 where: {
+                    id: body.safe_id,
                     user_id: user.id
                 }
             })
@@ -121,6 +136,7 @@ module.exports = {
 
             const findLimit = await Transactions.findAll({
                 where: {
+                    safe_id: body.safe_id,
                     category_id: body.category_id,
                     user_id: user.id,
                 }
@@ -130,7 +146,12 @@ module.exports = {
                 return e.dataValues.expense;
             });
 
-            const sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
+            let sumLimitTransaction;
+            if (limitTransaction.length == 1) {
+                sumLimitTransaction = limitTransaction[0]
+            } else {
+                sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
+            }
 
             const newLimit = limit.limit - sumLimitTransaction;
 
@@ -392,6 +413,7 @@ module.exports = {
             const expense = await Transactions.findAll({
                 where: {
                     user_id: user.id,
+                    safe_id: body.safe_id,
                     type: 'expense'
                 }
             });
@@ -399,12 +421,23 @@ module.exports = {
             let allExpenses = expense.map(e => {
                 return e.dataValues.expense
             });
+            console.log("🚀 ~ file: transactionsController.js ~ line 424 ~ postAddIncome:async ~ allExpenses", allExpenses[0])
 
-            const sumExpense = allExpenses.reduce((a, b) => a + b)
+            let sumExpense;
+            if (allExpenses.length == 0) {
+                sumExpense = 0
+            } else if (allExpenses.length == 1) {
+                sumExpense = allExpenses[0]
+            } else if (allExpenses.length > 1) {
+                sumExpense = allExpenses.reduce((a, b) => a + b)
 
+            }
+
+            //to count all transaction type addIncome -> hitung addIncome
             const addIncome = await Transactions.findAll({
                 where: {
                     user_id: user.id,
+                    safe_id: body.safe_id,
                     type: 'addIncome'
                 }
             })
@@ -413,14 +446,22 @@ module.exports = {
                 return e.dataValues.expense
             });
 
-            const sumIncome = allAddIncomes.reduce((a, b) => a + b)
+            let sumIncome;
+            if (allAddIncomes.length == 1) {
+                sumIncome = body.expense
+            } else if (allAddIncomes.length > 1) {
+                sumIncome = allAddIncomes.reduce((a, b) => a + b)
+            }
 
-            const update = safe.openingBalance + sumIncome - sumExpense
+            //hitung nilai safe baru
+            const newSafe = safe.openingBalance + sumIncome - sumExpense
 
+            //update nilai safe
             const updateSafe = await Safes.update({
-                amount: update
+                amount: newSafe
             }, {
                 where: {
+                    id: body.safe_id,
                     user_id: user.id
                 }
             })
