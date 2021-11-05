@@ -67,11 +67,10 @@ module.exports = {
                 verifCode: uuidv4(),
             });
 
-            let gender = body.gender.toLowerCase();
             const profile = await Profiles.create({
                 user_id: user.id,
                 fullName: body.fullName,
-                gender: gender,
+                gender: body.gender.toLowerCase(),
                 age: body.age,
                 [req.file ? "profilePicture" : null]: req.file ? req.file.path : null,
             });
@@ -116,7 +115,6 @@ module.exports = {
                 message: "Registered successfully, please check your email",
             });
         } catch (error) {
-            console.log("🚀 ~ file: usersController.js ~ line 121 ~ register: ~ error", error)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
