@@ -14,7 +14,7 @@ router.get("/login/google", passport.authenticate("google", { scope: ["profile",
 router.get("/failed", (req, res)=> res.send("You failed to login, please try again."))
 router.get("/google/callback", passport.authenticate("google", { failureRedirect: "/api/v1/user/failed" }), users.google)
 
-router.get("/login/facebook", passport.authenticate("facebook"));
+router.get("/login/facebook", passport.authenticate("facebook", { scope: ["public_profile", "email"] }));
 router.get("/failed", (req, res)=> res.send("You failed to login, please try again."))
 router.get("/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/api/v1/user/failed" }), users.facebook)
 
