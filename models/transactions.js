@@ -25,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
         safe_id: DataTypes.INTEGER,
         detailExpense: DataTypes.STRING,
         expense: DataTypes.INTEGER,
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        amount: DataTypes.INTEGER,
     }, {
         sequelize,
         modelName: 'Transactions',
