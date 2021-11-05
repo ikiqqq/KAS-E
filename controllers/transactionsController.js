@@ -78,7 +78,7 @@ module.exports = {
                 });
             };
 
-            // to count all transaction type expense -> hitung pengeluaran
+            // to count all transaction type expense 
             const expense = await Transactions.findAll({
                 where: {
                     user_id: user.id,
@@ -95,7 +95,7 @@ module.exports = {
             if (allExpenses.length == 1) sumExpense = allExpenses[0];
             if (allExpenses.length > 1) sumExpense = allExpenses.reduce((a, b) => a + b);
 
-            //to count all transaction type addIncome -> hitung addIncome
+            //to count all transaction type addIncome 
             const addIncome = await Transactions.findAll({
                 where: {
                     user_id: user.id,
