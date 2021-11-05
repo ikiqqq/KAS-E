@@ -401,7 +401,7 @@ module.exports = {
             console.log(req, "Req")
             const checkEmail = await Users.findOne({
                 where: {
-                    email: req.user._json.id,
+                    email: req.user._json.email,
                 },
             });
             if (checkEmail) {
