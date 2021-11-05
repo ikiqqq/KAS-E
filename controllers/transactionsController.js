@@ -1,7 +1,7 @@
 const { Users, Limits, Safes, Transactions, Categories } = require("../models");
 const Joi = require("joi");
 const { Op } = require("sequelize");
-const sequelize = require('sequelize')
+const sequelize = require('sequelize');
 
 module.exports = {
     postTransaction: async(req, res) => {
@@ -31,13 +31,13 @@ module.exports = {
                     message: "Bad Request",
                     errors: error["details"][0]["message"],
                 });
-            }
+            };
 
             const safe = await Safes.findOne({
                 where: {
                     id: body.safe_id,
-                    user_id: user.id
-                }
+                    user_id: user.id,
+                },
             });
 
             if (!safe) {
@@ -45,14 +45,14 @@ module.exports = {
                     status: "failed",
                     message: "Safe not found",
                 });
-            }
+            };
 
             const limit = await Limits.findOne({
                 where: {
                     safe_id: body.safe_id,
                     category_id: body.category_id,
                     user_id: user.id,
-                }
+                },
             });
 
             if (!limit) {
@@ -60,7 +60,7 @@ module.exports = {
                     status: "failed",
                     message: "Limit in this category is not found. Please set limit first",
                 });
-            }
+            };
 
             const create = await Transactions.create({
                 user_id: user.id,
@@ -68,7 +68,7 @@ module.exports = {
                 safe_id: body.safe_id,
                 detailExpense: body.detailExpense,
                 expense: body.expense,
-                type: 'expense'
+                type: 'expense',
             });
 
             if (!create) {
@@ -76,70 +76,63 @@ module.exports = {
                     status: "failed",
                     message: "Unable to save data to database",
                 });
-            }
+            };
 
-            // to count all transaction type expense -> hitung pengeluaran
+            // to count all transaction type expense 
             const expense = await Transactions.findAll({
                 where: {
                     user_id: user.id,
                     safe_id: body.safe_id,
-                    type: 'expense'
-                }
+                    type: 'expense',
+                },
             });
 
             let allExpenses = expense.map(e => {
-                return e.dataValues.expense
+                return e.dataValues.expense;
             });
 
             let sumExpense;
-            if (allExpenses.length == 1) {
-                sumExpense = allExpenses[0]
-            } else if (allExpenses.length > 1) {
-                sumExpense = allExpenses.reduce((a, b) => a + b)
-            }
+            if (allExpenses.length == 1) sumExpense = allExpenses[0];
+            if (allExpenses.length > 1) sumExpense = allExpenses.reduce((a, b) => a + b);
 
-            //to count all transaction type addIncome -> hitung addIncome
+            //to count all transaction type addIncome 
             const addIncome = await Transactions.findAll({
                 where: {
                     user_id: user.id,
                     safe_id: body.safe_id,
-                    type: 'addIncome'
-                }
-            })
+                    type: 'addIncome',
+                },
+            });
 
             const allAddIncomes = addIncome.map(e => {
-                return e.dataValues.expense
+                return e.dataValues.expense;
             });
 
             let sumIncome;
-            if (allAddIncomes.length == 0) {
-                sumIncome = 0
-            } else if (allAddIncomes.length == 1) {
-                sumIncome = allAddIncomes[0]
-            } else if (allAddIncomes.length > 1) {
-                sumIncome = allAddIncomes.reduce((a, b) => a + b)
-            }
+            if (allAddIncomes.length == 0) sumIncome = 0;
+            if (allAddIncomes.length == 1) sumIncome = allAddIncomes[0];
+            if (allAddIncomes.length > 1) sumIncome = allAddIncomes.reduce((a, b) => a + b);
+
 
             //hitung nilai safe baru
-            const newSafe = safe.openingBalance + sumIncome - sumExpense
+            const newSafe = safe.openingBalance + sumIncome - sumExpense;
 
             //update nilai safe
             const updateSafe = await Safes.update({
-                amount: newSafe
+                amount: newSafe,
             }, {
                 where: {
                     id: body.safe_id,
-                    user_id: user.id
-                }
-            })
-
+                    user_id: user.id,
+                },
+            });
 
             const findLimit = await Transactions.findAll({
                 where: {
                     safe_id: body.safe_id,
                     category_id: body.category_id,
                     user_id: user.id,
-                }
+                },
             });
 
             let limitTransaction = findLimit.map((e) => {
@@ -147,20 +140,16 @@ module.exports = {
             });
 
             let sumLimitTransaction;
-            if (limitTransaction.length == 1) {
-                sumLimitTransaction = limitTransaction[0]
-            } else {
-                sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
-            }
+            if (limitTransaction.length == 1) sumLimitTransaction = limitTransaction[0];
+            if (limitTransaction.length > 1) sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
 
             const newLimit = limit.limit - sumLimitTransaction;
 
             if (newLimit < 0) {
-                return res.status(201).json({ //warning
+                return res.status(201).json({
                     status: 'success',
                     message: `Over limit ${newLimit}`,
                     data: { create },
-                    // newLimit
                 });
             } else {
                 return res.status(200).json({
@@ -168,17 +157,16 @@ module.exports = {
                     message: "Successfully saved data to database",
                     data: { create },
                 });
-            }
+            };
 
         } catch (error) {
-            console.log(error.message);
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
             });
-        }
+        };
     },
-    getAllTransaction: async(req, res) => {
+    getAllTransactionDaily: async(req, res) => {
         const user = req.user;
         let date = req.query.date;
         let where;
@@ -211,14 +199,14 @@ module.exports = {
                         as: "Categories",
                         include: [{
                             where: {
-                                user_id: user.id
+                                user_id: user.id,
                             },
                             model: Limits,
                             as: "Limit"
                         }]
                     },
                     {
-                        model: Safes
+                        model: Safes,
                     }
                 ],
             });
@@ -228,7 +216,7 @@ module.exports = {
                     status: "failed",
                     message: "Data not found",
                 });
-            }
+            };
 
             return res.status(200).json({
                 status: "success",
@@ -238,7 +226,57 @@ module.exports = {
                 }
             });
         } catch (error) {
-            console.log(error.message)
+            return res.status(500).json({
+                status: "failed",
+                message: "Internal Server Error",
+            });
+        }
+    },
+    getAllTransactionMonthly: async(req, res) => {
+        const user = req.user;
+        let date = req.query.date;
+        try {
+            if (date == null) date = new Date();
+            const transactions = await Transactions.findAll({
+                where: {
+                    user_id: user.id,
+                    createdAt: {
+                        [Op.lt]: new Date(date).setDate(new Date(date).getDate() + 1),
+                        [Op.gt]: new Date(date).setDate(1),
+                    },
+                },
+                include: [{
+                        model: Categories,
+                        as: "Categories",
+                        include: [{
+                            where: {
+                                user_id: user.id
+                            },
+                            model: Limits,
+                            as: "Limit"
+                        }]
+                    },
+                    {
+                        model: Safes,
+                    }
+                ],
+            });
+
+            if (transactions.length == 0) {
+                return res.status(404).json({
+                    status: "failed",
+                    message: "Data not found",
+                });
+            };
+
+            return res.status(200).json({
+                status: "success",
+                message: "Successfully retrieved data transactions",
+                data: {
+                    transactions,
+                }
+            });
+        } catch (error) {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
@@ -271,7 +309,7 @@ module.exports = {
                     message: "Bad Request",
                     errors: error["details"][0]["message"],
                 });
-            }
+            };
 
             const updateTransaction = await Transactions.update({...body }, { where: { id: id } });
 
@@ -306,29 +344,30 @@ module.exports = {
         const id = req.params.id;
 
         try {
-
             const transaction = await Transactions.findOne({
                 where: {
                     id,
-                    user_id: user.id
-                }
+                    user_id: user.id,
+                },
             })
 
             const safe = await Safes.findOne({
                 where: {
-                    user_id: user.id
-                }
+                    user_id: user.id,
+                    id: transaction.dataValues.safe_id,
+                },
             });
 
-            const sum = safe.dataValues.amount + transaction.dataValues.expense
+            const sum = safe.dataValues.amount + transaction.dataValues.expense;
 
             const updateSafe = await Safes.update({
-                amount: sum
+                amount: sum,
             }, {
                 where: {
-                    user_id: user.id
+                    user_id: user.id,
+                    id: transaction.dataValues.safe_id,
                 }
-            })
+            });
 
             const check = await Transactions.destroy({
                 where: {
@@ -385,8 +424,8 @@ module.exports = {
             const safe = await Safes.findOne({
                 where: {
                     id: body.safe_id,
-                    user_id: user.id
-                }
+                    user_id: user.id,
+                },
             });
 
             if (!safe) {
@@ -410,61 +449,54 @@ module.exports = {
                 });
             }
 
+            //hitung all expense type
             const expense = await Transactions.findAll({
                 where: {
                     user_id: user.id,
                     safe_id: body.safe_id,
-                    type: 'expense'
-                }
+                    type: 'expense',
+                },
             });
 
             let allExpenses = expense.map(e => {
-                return e.dataValues.expense
+                return e.dataValues.expense;
             });
-            console.log("🚀 ~ file: transactionsController.js ~ line 424 ~ postAddIncome:async ~ allExpenses", allExpenses[0])
 
             let sumExpense;
-            if (allExpenses.length == 0) {
-                sumExpense = 0
-            } else if (allExpenses.length == 1) {
-                sumExpense = allExpenses[0]
-            } else if (allExpenses.length > 1) {
-                sumExpense = allExpenses.reduce((a, b) => a + b)
+            if (allExpenses.length == 0) sumExpense = 0;
+            if (allExpenses.length == 1) sumExpense = allExpenses[0];
+            if (allExpenses.length > 1) sumExpense = allExpenses.reduce((a, b) => a + b);
 
-            }
 
             //to count all transaction type addIncome -> hitung addIncome
             const addIncome = await Transactions.findAll({
                 where: {
                     user_id: user.id,
                     safe_id: body.safe_id,
-                    type: 'addIncome'
-                }
-            })
+                    type: 'addIncome',
+                },
+            });
 
             const allAddIncomes = addIncome.map(e => {
-                return e.dataValues.expense
+                return e.dataValues.expense;
             });
 
             let sumIncome;
-            if (allAddIncomes.length == 1) {
-                sumIncome = body.expense
-            } else if (allAddIncomes.length > 1) {
-                sumIncome = allAddIncomes.reduce((a, b) => a + b)
-            }
+            if (allAddIncomes.length == 1) sumIncome = allAddIncomes[0];
+            if (allAddIncomes.length > 1) sumIncome = allAddIncomes.reduce((a, b) => a + b);
 
             //hitung nilai safe baru
-            const newSafe = safe.openingBalance + sumIncome - sumExpense
+            const newSafe = safe.openingBalance + sumIncome - sumExpense;
 
             //update nilai safe
             const updateSafe = await Safes.update({
-                amount: newSafe
+                amount: newSafe,
             }, {
                 where: {
                     id: body.safe_id,
                     user_id: user.id
                 }
-            })
+            });
 
             return res.status(200).json({
                 status: "success",
@@ -472,7 +504,6 @@ module.exports = {
                 data: { create },
             });
         } catch (error) {
-            console.log(error.message);
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",

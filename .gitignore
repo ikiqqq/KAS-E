@@ -1,4 +1,3 @@
 node_modules
-/playground.js
-/.gitignore
-/package.json
+playground.js
+.env
