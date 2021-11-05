@@ -397,6 +397,7 @@ module.exports = {
     facebook: async(req, res) => {
         let payload;
         try {
+            console.log(req.user, "Req user")
             const checkEmail = await Users.findOne({
                 where: {
                     email: req.user._json.email,
