@@ -69,6 +69,7 @@ module.exports = {
                 detailExpense: body.detailExpense,
                 expense: body.expense,
                 type: 'expense',
+                amount: safe.dataValues.amount - body.expense
             });
 
             if (!create) {
@@ -144,20 +145,54 @@ module.exports = {
             if (limitTransaction.length > 1) sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
 
             const newLimit = limit.limit - sumLimitTransaction;
+            const updateLimit = await Limits.update({
+                newLimit: newLimit,
+            }, {
+                where: {
+                    category_id: body.category_id,
+                    user_id: user.id,
+                    safe_id: body.safe_id
+                },
+            });
+
+            const data = await Transactions.findOne({
+                where: {
+                    id: create.dataValues.id,
+                    user_id: user.id
+                },
+                include: [{
+                        model: Categories,
+                        as: "Categories",
+                        include: [{
+                            where: {
+                                user_id: user.id,
+                            },
+                            model: Limits,
+                            as: "Limit",
+                            where: {
+                                safe_id: body.safe_id
+                            }
+                        }]
+                    },
+                    {
+                        model: Safes,
+                    }
+                ]
+            })
 
             if (newLimit < 0) {
                 return res.status(201).json({
                     status: 'success',
                     message: `Over limit ${newLimit}`,
-                    data: { create },
+                    data: { data },
                 });
-            } else {
-                return res.status(200).json({
-                    status: "success",
-                    message: "Successfully saved data to database",
-                    data: { create },
-                });
-            };
+            }
+
+            return res.status(200).json({
+                status: "success",
+                message: "Successfully saved data to database",
+                data: { data },
+            });
 
         } catch (error) {
             return res.status(500).json({
@@ -202,7 +237,10 @@ module.exports = {
                                 user_id: user.id,
                             },
                             model: Limits,
-                            as: "Limit"
+                            as: "Limit",
+                            where: {
+                                safe_id: transaction.dataValues.safe_id
+                            }
                         }]
                     },
                     {
@@ -210,6 +248,7 @@ module.exports = {
                     }
                 ],
             });
+            console.log("🚀 ~ file: transactionsController.js ~ line 238 ~ getAllTransactionDaily:async ~ transactions", transactions)
 
             if (transactions.length == 0) {
                 return res.status(404).json({
@@ -286,7 +325,7 @@ module.exports = {
     updateTransaction: async(req, res) => {
         const user = req.user;
         const body = req.body;
-        const id = req.params.id;
+        const { id } = req.params;
 
         try {
             const schema = Joi.object({
@@ -311,6 +350,10 @@ module.exports = {
                 });
             };
 
+            const before = await Transactions.findOne({
+                where: { id: id, user_id: user.id },
+            });
+
             const updateTransaction = await Transactions.update({...body }, { where: { id: id } });
 
             if (!updateTransaction[0]) {
@@ -324,6 +367,21 @@ module.exports = {
                 where: { id: id, user_id: user.id },
             });
 
+            const safe = await Safes.findOne({
+                where: {
+                    id: data.dataValues.safe_id,
+                    user_id: user.id
+                }
+            })
+            const newSafe = safe.dataValues.amount + before.dataValues.expense - data.dataValues.expense;
+            const updateSafe = await Safes.update({
+                amount: newSafe,
+            }, {
+                where: {
+                    id: data.dataValues.safe_id,
+                    user_id: user.id,
+                },
+            });
             return res.status(200).json({
                 status: "success",
                 message: "Successfully retrieved data transactions",
@@ -332,6 +390,7 @@ module.exports = {
                 },
             });
         } catch (error) {
+            console.log("🚀 ~ file: transactionsController.js ~ line 397 ~ updateTransaction:async ~ error", error)
             console.log(error.message)
             return res.status(500).json({
                 status: "failed",
@@ -439,6 +498,7 @@ module.exports = {
                 user_id: user.id,
                 safe_id: body.safe_id,
                 expense: body.expense,
+                amount: safe.dataValues.amount + body.expense,
                 type: 'addIncome',
             });
 
@@ -498,10 +558,20 @@ module.exports = {
                 }
             });
 
+            const data = await Transactions.findOne({
+                where: {
+                    id: create.dataValues.id,
+                    user_id: user.id
+                },
+                include: [{
+                    model: Safes,
+                }]
+            })
+
             return res.status(200).json({
                 status: "success",
                 message: "Successfully saved add income to database",
-                data: { create },
+                data: { data },
             });
         } catch (error) {
             return res.status(500).json({

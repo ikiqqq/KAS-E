@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         user_id: DataTypes.INTEGER,
         limit: DataTypes.INTEGER,
         safe_id: DataTypes.INTEGER,
-        amount: DataTypes.INTEGER,
+        newLimit: DataTypes.INTEGER,
     }, {
         sequelize,
         modelName: 'Limits',
