@@ -126,7 +126,6 @@ module.exports = {
             const updateSafe = await Safes.update({
                     user_id: user.id,
                     safeName: body.safeName,
-                    amount: body.amount,
                     openingBalance: body.amount,
                     id: params.id
                 }, 
