@@ -8,7 +8,7 @@ const form = multer()
 
 router.post("/create", form.any(), auth, safesController.createSafe);
 router.get("/", auth, check, safesController.getSafe);
-router.put("/", auth, safesController.updateSafe);
+router.put("/:id", auth, safesController.updateSafe);
 router.delete("/:id", auth, safesController.deleteSafe);
 
 module.exports = router;
