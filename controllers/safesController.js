@@ -45,7 +45,6 @@ module.exports = {
                 })
             };
         } catch (error) {
-            console.log(error);
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
@@ -86,7 +85,6 @@ module.exports = {
                     });
             }
         } catch (error) {
-            console.log(error);
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
@@ -176,7 +174,6 @@ module.exports = {
                 updatedSafe: { data }
             });
         } catch (error) {
-            console.log("🚀 ~ file: safesController.js ~ line 168 ~ updateSafe:async ~ error", error)
             return res.status(500).json({
                 status: 'failed',
                 message: 'Internal server error',
@@ -206,7 +203,6 @@ module.exports = {
                 });
             }
         } catch (error) {
-            console.log(error);
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
