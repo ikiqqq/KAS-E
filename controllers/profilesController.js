@@ -21,6 +21,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Data not found",
+                    data : null
                 });
             }
 
