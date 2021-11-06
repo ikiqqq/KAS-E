@@ -44,6 +44,7 @@ module.exports = {
                 return res.status(404).json({
                     status: "failed",
                     message: "Safe not found",
+                    data: null,
                 });
             };
 
@@ -59,6 +60,7 @@ module.exports = {
                 return res.status(404).json({
                     status: "failed",
                     message: "Limit in this category is not found. Please set limit first",
+                    data: null,
                 });
             };
 
@@ -76,6 +78,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Unable to save data to database",
+                    data: null,
                 });
             };
 
@@ -145,6 +148,7 @@ module.exports = {
             if (limitTransaction.length > 1) sumLimitTransaction = limitTransaction.reduce((a, b) => a + b);
 
             const newLimit = limit.limit - sumLimitTransaction;
+
             const updateLimit = await Limits.update({
                 newLimit: newLimit,
             }, {
@@ -198,6 +202,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
+                data: null,
             });
         };
     },
@@ -267,6 +272,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
+                data: null,
             });
         }
     },
@@ -319,6 +325,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal Server Error",
+                data: null,
             });
         }
     },
@@ -360,6 +367,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Unable to update transaction",
+                    data: null,
                 });
             }
 
@@ -407,6 +415,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
+                data: null,
             });
         }
     },
@@ -451,6 +460,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Unable to delete the data",
+                    data: null,
                 });
             }
 
@@ -462,6 +472,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
+                data: null,
             });
         }
     },
@@ -503,6 +514,7 @@ module.exports = {
                 return res.status(404).json({
                     status: "failed",
                     message: "Safe not found",
+                    data: null,
                 });
             }
 
@@ -518,6 +530,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Unable to save add income to database",
+                    data: null,
                 });
             }
 
@@ -588,6 +601,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
+                data: null,
             });
         }
     },
