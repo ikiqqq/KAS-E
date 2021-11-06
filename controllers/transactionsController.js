@@ -254,6 +254,7 @@ module.exports = {
                 return res.status(404).json({
                     status: "failed",
                     message: "Data not found",
+                    data: null,
                 });
             };
 
@@ -305,6 +306,7 @@ module.exports = {
                 return res.status(404).json({
                     status: "failed",
                     message: "Data not found",
+                    data: null,
                 });
             };
 
@@ -363,25 +365,39 @@ module.exports = {
                 });
             }
 
-            const data = await Transactions.findOne({
+            const after = await Transactions.findOne({
                 where: { id: id, user_id: user.id },
             });
 
             const safe = await Safes.findOne({
                 where: {
-                    id: data.dataValues.safe_id,
+                    id: after.dataValues.safe_id,
                     user_id: user.id
                 }
             })
-            const newSafe = safe.dataValues.amount + before.dataValues.expense - data.dataValues.expense;
+            const newSafe = safe.dataValues.amount + before.dataValues.expense - after.dataValues.expense;
+
             const updateSafe = await Safes.update({
                 amount: newSafe,
             }, {
                 where: {
-                    id: data.dataValues.safe_id,
+                    id: after.dataValues.safe_id,
                     user_id: user.id,
                 },
             });
+
+            const update = await Transactions.update({
+                amount: newSafe
+            }, {
+                where: {
+                    id,
+                }
+            });
+
+            const data = await Transactions.findOne({
+                where: { id: id, user_id: user.id },
+            });
+
             return res.status(200).json({
                 status: "success",
                 message: "Successfully retrieved data transactions",
