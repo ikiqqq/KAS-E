@@ -22,6 +22,7 @@ module.exports = {
                     status: "failed",
                     message: "Bad Request",
                     errors: check.error["details"][0]["message"],
+                    data: null
                 });
             }
 
@@ -39,16 +40,18 @@ module.exports = {
                 });
             } else {
                 return res.status(401).json({
-                    message: "Failed to create user safe"
-                });
-            }
+                    message: "Failed to create user safe",
+                    data: null
+                })
+            };
         } catch (error) {
             console.log(error);
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
-            });
-        }
+                data: null
+            })
+        };
     },
 
     getSafe: async(req, res) => {
@@ -75,13 +78,11 @@ module.exports = {
                 });
 
             } else {
-                console.log(safe)
                 return res
                     .status(200)
                     .json({
                         success: { message: "This is the list of safes" },
-                        data: safe,
-
+                        data: safe
                     });
             }
         } catch (error) {
@@ -89,8 +90,9 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
-            });
-        }
+                data: null
+            })
+        };
     },
 
     updateSafe: async(req, res) => {
@@ -116,14 +118,14 @@ module.exports = {
                 return res.status(400).json({
                     status: 'failed',
                     message: "Bad Request",
-                    errors: error["details"][0]["message"]
+                    errors: error["details"][0]["message"],
+                    data: null
                 });
-            }   
+            };   
 
             const updateSafe = await Safes.update({
                     user_id: user.id,
                     safeName: body.safeName,
-                    amount: body.amount,
                     openingBalance: body.amount,
                     id: params.id
                 }, 
@@ -135,9 +137,10 @@ module.exports = {
             if (!updateSafe[0]) {
                 return res.status(400).json({
                     status: 'failed',
-                    message: 'Failed to update safe. You can not update other people safe'
-                });
-            }
+                    message: 'Failed to update safe. You can not update other people safe',
+                    data: null
+                })
+            };
 
             const data = await Safes.findOne({
                 where: { 
@@ -154,9 +157,10 @@ module.exports = {
         } catch (error) {
             return res.status(500).json({
                 status: 'failed',
-                message: 'Internal server error'
-            });
-        }
+                message: 'Internal server error',
+                data: null
+            })
+        };
     },
 
     deleteSafe: async(req, res) => {
@@ -171,6 +175,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "Failed to delete!",
+                    data: null
                 });
             } else {
                 return res.status(200).json({
@@ -183,6 +188,7 @@ module.exports = {
             return res.status(500).json({
                 status: "failed",
                 message: error.message || "Internal Server Error",
+                data: null
             });
         }
     }
