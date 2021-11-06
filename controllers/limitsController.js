@@ -6,49 +6,60 @@ const { Limits, Categories } = require("../models");
 module.exports = {
   postLimit: async (req, res) => {
     const body = req.body;
-    const user = req.user
-    try {
-      const schema = Joi.object({
-        category_id: Joi.number().required(),
-        limit: Joi.number().required(),
-        safe_id: Joi.number().required()
-      });
-
-      const { error } = schema.validate(
-        {
-          category_id: body.category_id,
-          limit: body.limit,
-          safe_id: body.safe_id
-        },
-        { abortEarly: false }
-      );
-
-      if (error) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Bad Request",
-          errors: error["details"][0]["message"],
-        });
-      }
-      const isExist=await Limits.findOne({
-        where:{
-          user_id: user.id,
-          category_id: body.category_id,
-          safe_id: body.safe_id
-        }
-      })
-      if(isExist){
-        return res.status(400).json({
-          status: "failed",
-          message: "already has this limit",
-        });
-      }
-      const check = await Limits.create({
-        category_id: body.category_id,
+    const user = req.user;
+    const category = body.map((x) => x.category_id);
+    const limit = body.map((x) => x.limit);
+    const safe_id = body.map((x) => x.safe_id);
+    const data = [];
+    for (var i = 0; i < body.length; i++) {
+      data.push({
+        category_id: category[i],
+        limit: limit[i],
+        safe_id: safe_id[i],
         user_id: user.id,
-        limit: body.limit,
-        safe_id: body.safe_id
       });
+    }
+    try {
+      // const schema = Joi.object().keys({
+      //   category_id: Joi.number().required(),
+      //   limit: Joi.number().required(),
+      //   safe_id: Joi.number().required(),
+      // });
+
+      // const { error } = schema.validate(
+      //   [{
+      //     category_id: body.category_id,
+      //     limit: body.limit,
+      //     safe_id: body.safe_id,
+      //   }],
+      //   { abortEarly: false },
+      //   Joi.array().items(schema)
+      // );
+
+      // if (error) {
+      //   return res.status(400).json({
+      //     status: "failed",
+      //     message: "Bad Request",
+      //     errors: error["details"][0]["message"],
+      //   });
+      // }
+
+      // const isExist=await Limits.findOne({
+      //   where:{
+      //     user_id: user.id,
+      //     category_id: category,
+      //     safe_id: safe_id
+      //   }
+      // })
+      // if(isExist){
+      //   return res.status(400).json({
+      //     status: "failed",
+      //     message: "already has this limit",
+      //   });
+      // }
+      // console.log(isExist)
+
+      const check = await Limits.bulkCreate(data);
 
       if (!check) {
         return res.status(400).json({

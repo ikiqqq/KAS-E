@@ -5,7 +5,7 @@ const auth = require('../middlewares/authentication')
 const multer = require('multer');
 const form = multer()
 
-router.post("/", form.any(), auth, limit.postLimit )
+router.post("/", auth, limit.postLimit )
 router.get("/wholelimit", limit.getAllLimit)
 router.get('/', auth,limit.getLimit)
 router.put("/", auth,limit.updateLimit)
