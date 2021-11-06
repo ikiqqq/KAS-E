@@ -71,6 +71,7 @@ module.exports = {
                 return res.status(400).json({
                     status: "failed",
                     message: "There's no safe in database!",
+                    data: null
                 });
 
             } else {
