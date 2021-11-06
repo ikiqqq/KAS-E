@@ -128,13 +128,25 @@ module.exports = {
                 }
             })
 
-            const newAmount = body.amount - (safe.dataValues.openingBalance - safe.dataValues.amount)
-
-            const updateSafe = await Safes.update({
+            let updateSafe;
+            if (body.amount) {
+                const newAmount = body.amount - (safe.dataValues.openingBalance - safe.dataValues.amount)
+                updateSafe = await Safes.update({
+                    user_id: user.id,
+                    safeName: body.safeName,
+                    openingBalance: body.amount,
+                    amount: newAmount,
+                    id: params.id
+                }, {
+                    where: {
+                        user_id: user.id,
+                        id: params.id
+                    }
+                });
+            }
+            updateSafe = await Safes.update({
                 user_id: user.id,
                 safeName: body.safeName,
-                openingBalance: body.amount,
-                amount: newAmount,
                 id: params.id
             }, {
                 where: {
