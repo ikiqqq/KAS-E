@@ -225,8 +225,10 @@ module.exports = {
             } else {
                 where = {
                     user_id: user.id,
+                    createdAt: new Date()
                 };
             }
+
             const transactions = await Transactions.findAll({
                 where: where,
                 include: [{
@@ -238,9 +240,6 @@ module.exports = {
                             },
                             model: Limits,
                             as: "Limit",
-                            where: {
-                                safe_id: transaction.dataValues.safe_id
-                            }
                         }]
                     },
                     {
@@ -248,7 +247,6 @@ module.exports = {
                     }
                 ],
             });
-            console.log("🚀 ~ file: transactionsController.js ~ line 238 ~ getAllTransactionDaily:async ~ transactions", transactions)
 
             if (transactions.length == 0) {
                 return res.status(404).json({
@@ -406,8 +404,6 @@ module.exports = {
                 },
             });
         } catch (error) {
-            console.log("🚀 ~ file: transactionsController.js ~ line 397 ~ updateTransaction:async ~ error", error)
-            console.log(error.message)
             return res.status(500).json({
                 status: "failed",
                 message: "Internal server error",
@@ -542,7 +538,6 @@ module.exports = {
             if (allExpenses.length == 0) sumExpense = 0;
             if (allExpenses.length == 1) sumExpense = allExpenses[0];
             if (allExpenses.length > 1) sumExpense = allExpenses.reduce((a, b) => a + b);
-
 
             //to count all transaction type addIncome -> hitung addIncome
             const addIncome = await Transactions.findAll({
