@@ -96,17 +96,20 @@ module.exports = {
     updateSafe: async(req, res) => {
         const user = req.user;
         const body = req.body;
+        const params = req.params;
         try {
             const schema = Joi.object({
                 user_id: Joi.number(),
                 safeName: Joi.string(),
-                amount: Joi.number()
+                amount: Joi.number(),
+                safe_id: Joi.number()
             });
 
             const { error } = schema.validate({
                 user_id: user.id,
                 safeName: body.safeName,
-                amount: body.amount
+                amount: body.amount,
+                safe_id: params.id
             }, { abortEarly: false });
 
             if (error) {
@@ -115,27 +118,38 @@ module.exports = {
                     message: "Bad Request",
                     errors: error["details"][0]["message"]
                 });
-            }
+            }   
 
-            const updateSafe = await Safes.update({...body }, { where: { user_id: user.id } });
+            const updateSafe = await Safes.update({
+                    user_id: user.id,
+                    safeName: body.safeName,
+                    amount: body.amount,
+                    openingBalance: body.amount,
+                    id: params.id
+                }, 
+                { where: { 
+                    user_id: user.id, 
+                    id: params.id } 
+            });
 
             if (!updateSafe[0]) {
                 return res.status(400).json({
                     status: 'failed',
-                    message: 'Unable to update safe'
+                    message: 'Failed to update safe. You can not update other people safe'
                 });
             }
 
             const data = await Safes.findOne({
-                where: { user_id: user.id }
+                where: { 
+                    user_id: user.id, 
+                    id: params.id 
+                }
             });
 
             return res.status(200).json({
                 status: 'success',
                 message: 'Successfully retrieved data safe',
-                data: {
-                    data
-                }
+                updatedSafe: { data }
             });
         } catch (error) {
             return res.status(500).json({
