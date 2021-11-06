@@ -31,8 +31,8 @@ module.exports = {
       if (!expense) {
         return res.status(404).json({
           status: "failed",
-          message: "transaction not found",
-          data: expense,
+          message: "Transaction not found",
+          data: null,
         });
       }
 
@@ -58,8 +58,8 @@ module.exports = {
       if (!addIncome) {
         return res.status(404).json({
           status: "failed",
-          message: "transaction not found",
-          data: addIncome,
+          message: "Transaction not found",
+          data: null,
         });
       }
 
@@ -67,14 +67,14 @@ module.exports = {
         return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
-          expense: "No expenses today",
-          addIncome: "No incomes today",
+          expense: null,
+          addIncome: null,
         });
       } else if (expense.length == 0) {
         return res.status(200).json({
           status: "success",
           message: "daily report transaction retrieved successfully",
-          expense: "No expenses today",
+          expense: null,
           addIncome: addIncome,
         });
       } else if (addIncome.length == 0) {
@@ -82,7 +82,7 @@ module.exports = {
           status: "success",
           message: "daily report transaction retrieved successfully",
           expense: expense,
-          addIncome: "No incomes today",
+          addIncome: null,
         });
       }
       return res.status(200).json({
@@ -92,17 +92,13 @@ module.exports = {
         addIncome: addIncome,
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         status: "error",
-        error: {
-          message: "Internal Server Error",
-        },
+        message: "Internal Server Error",
+        data: null,
       });
     }
   },
-
-  // Monthly Report
   getMonthly: async (req, res) => {
     const user = req.user;
     let date = req.query.date;
@@ -132,6 +128,7 @@ module.exports = {
         return res.status(404).json({
           status: "failed",
           message: "Transaction not found",
+          data: null,
         });
       }
 
@@ -153,18 +150,25 @@ module.exports = {
           attributes: ["safeName", "openingBalance"],
         },
       });
+      if (!addIncome) {
+        return res.status(404).json({
+          status: "failed",
+          message: "Transaction not found",
+          data: null,
+        });
+      }
       if (expense.length == 0 && addIncome.length == 0) {
         return res.status(200).json({
           status: "success",
           message: "Monthly report transaction retrieved successfully",
-          expense: "No expenses this month",
-          addIncome: "No incomes this month",
+          expense: null,
+          addIncome: null,
         });
       } else if (expense.length == 0) {
         return res.status(200).json({
           status: "success",
           message: "Monthly report transaction retrieved successfully",
-          expense: "No expenses this month",
+          expense: null,
           addIncome: addIncome,
         });
       } else if (addIncome.length == 0) {
@@ -172,7 +176,7 @@ module.exports = {
           status: "success",
           message: "Monthly report transaction retrieved successfully",
           expense: expense,
-          addIncome: "No incomes this month",
+          addIncome: null,
         });
       }
       return res.status(200).json({
@@ -186,6 +190,7 @@ module.exports = {
       res.status(500).json({
         status: "error",
         error: { message: "Internal Server Error" },
+        data: null,
       });
     }
   },
