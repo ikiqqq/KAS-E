@@ -104,14 +104,12 @@ module.exports = {
                 user_id: Joi.number(),
                 safeName: Joi.string(),
                 amount: Joi.number(),
-                safe_id: Joi.number()
             });
 
             const { error } = schema.validate({
                 user_id: user.id,
                 safeName: body.safeName,
                 amount: body.amount,
-                safe_id: params.id
             }, { abortEarly: false });
 
             if (error) {
@@ -121,17 +119,28 @@ module.exports = {
                     errors: error["details"][0]["message"],
                     data: null
                 });
-            };   
+            };
+
+            const safe = await Safes.findOne({
+                where: {
+                    id: params.id,
+                    user_id: user.id
+                }
+            })
+
+            const newAmount = body.amount - (safe.dataValues.openingBalance - safe.dataValues.amount)
 
             const updateSafe = await Safes.update({
+                user_id: user.id,
+                safeName: body.safeName,
+                openingBalance: body.amount,
+                amount: newAmount,
+                id: params.id
+            }, {
+                where: {
                     user_id: user.id,
-                    safeName: body.safeName,
-                    openingBalance: body.amount,
                     id: params.id
-                }, 
-                { where: { 
-                    user_id: user.id, 
-                    id: params.id } 
+                }
             });
 
             if (!updateSafe[0]) {
@@ -143,9 +152,9 @@ module.exports = {
             };
 
             const data = await Safes.findOne({
-                where: { 
-                    user_id: user.id, 
-                    id: params.id 
+                where: {
+                    user_id: user.id,
+                    id: params.id
                 }
             });
 
@@ -155,6 +164,7 @@ module.exports = {
                 updatedSafe: { data }
             });
         } catch (error) {
+            console.log("🚀 ~ file: safesController.js ~ line 168 ~ updateSafe:async ~ error", error)
             return res.status(500).json({
                 status: 'failed',
                 message: 'Internal server error',
