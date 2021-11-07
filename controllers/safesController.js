@@ -1,5 +1,6 @@
 const { Safes, Users } = require("../models");
 const Joi = require("joi");
+const { Op } = require("sequelize");
 
 module.exports = {
   createSafe: async (req, res) => {
@@ -57,10 +58,15 @@ module.exports = {
   },
   getSafe: async (req, res) => {
     const user = req.user;
+    let date = new Date()
     try {
       const safe = await Safes.findAll({
         where: {
           user_id: user.id,
+          createdAt: {
+            [Op.lt]: new Date(date).setDate(new Date(date).getDate() + 1),
+            [Op.gt]: new Date(date).setDate(1),
+          },
         },
         include: [
           {
