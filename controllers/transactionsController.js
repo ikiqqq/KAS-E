@@ -61,7 +61,8 @@ module.exports = {
       if (!limit) {
         return res.status(404).json({
           status: "failed",
-          message: "Limit in this category is not found. Please set limit first",
+          message:
+            "Limit in this category is not found. Please set limit first",
           data: null,
         });
       }
@@ -245,7 +246,18 @@ module.exports = {
           createdAt: new Date(),
         };
       }
-
+      const safe = await Transactions.findAll({
+        where: {
+          user_id: user.id,
+          createdAt: {
+            [Op.lt]: new Date(date).setDate(new Date(date).getDate() + 1),
+            [Op.gt]: new Date(date).setDate(1),
+          },
+        },
+        attributes: ["safe_id"],
+        raw: true,
+      });
+      const safeid = safe.map((e) => e.safe_id);
       const transactions = await Transactions.findAll({
         where: where,
         include: [
@@ -256,6 +268,7 @@ module.exports = {
               {
                 where: {
                   user_id: user.id,
+                  safe_id: safeid,
                 },
                 model: Limits,
                 as: "Limit",
@@ -279,7 +292,7 @@ module.exports = {
       return res.status(200).json({
         status: "success",
         message: "Successfully retrieved data transactions",
-        data: {transactions},
+        data: { transactions },
       });
     } catch (error) {
       return res.status(500).json({
@@ -292,8 +305,22 @@ module.exports = {
   getAllTransactionMonthly: async (req, res) => {
     const user = req.user;
     let date = req.query.date;
+
     try {
       if (date == null) date = new Date();
+      const safe = await Transactions.findAll({
+        where: {
+          user_id: user.id,
+          createdAt: {
+            [Op.lt]: new Date(date).setDate(new Date(date).getDate() + 1),
+            [Op.gt]: new Date(date).setDate(1),
+          },
+        },
+        attributes: ["safe_id"],
+        raw: true,
+      });
+      const safeid = safe.map((e) => e.safe_id);
+
       const transactions = await Transactions.findAll({
         where: {
           user_id: user.id,
@@ -310,6 +337,7 @@ module.exports = {
               {
                 where: {
                   user_id: user.id,
+                  safe_id: safeid,
                 },
                 model: Limits,
                 as: "Limit",
@@ -321,7 +349,6 @@ module.exports = {
           },
         ],
       });
-
       if (transactions.length == 0) {
         return res.status(404).json({
           status: "failed",
@@ -333,7 +360,7 @@ module.exports = {
       return res.status(200).json({
         status: "success",
         message: "Successfully retrieved data transactions",
-        data: {transactions},
+        data: { transactions },
       });
     } catch (error) {
       return res.status(500).json({
@@ -374,9 +401,9 @@ module.exports = {
       }
 
       const before = await Transactions.findOne({
-        where: { 
-            id: id, 
-            user_id: user.id 
+        where: {
+          id: id,
+          user_id: user.id,
         },
       });
 
@@ -438,7 +465,7 @@ module.exports = {
       return res.status(200).json({
         status: "success",
         message: "Successfully retrieved data transactions",
-        data: {data},
+        data: { data },
       });
     } catch (error) {
       return res.status(500).json({
