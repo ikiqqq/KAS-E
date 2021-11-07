@@ -2,32 +2,29 @@ const { Safes, Users } = require("../models");
 const Joi = require("joi");
 
 module.exports = {
-  createSafe: async (req, res) => {
-    const user = req.user;
-    const body = req.body;
-    try {
-      const schema = Joi.object({
-        user_id: Joi.number().required(),
-        safeName: Joi.string().min(4).required(),
-        amount: Joi.number().required(),
-      });
-      const check = schema.validate(
-        {
-          user_id: user.id,
-          safeName: body.safeName,
-          amount: body.amount,
-        },
-        { abortEarly: false }
-      );
+    createSafe: async(req, res) => {
+        const user = req.user;
+        const body = req.body;
+        try {
+            const schema = Joi.object({
+                user_id: Joi.number().required(),
+                safeName: Joi.string().min(4).required(),
+                amount: Joi.number().required(),
+            });
+            const check = schema.validate({
+                user_id: user.id,
+                safeName: body.safeName,
+                amount: body.amount,
+            }, { abortEarly: false });
 
-      if (check.error) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Bad Request",
-          errors: check.error["details"][0]["message"],
-          data: null,
-        });
-      }
+            if (check.error) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "Bad Request",
+                    errors: check.error["details"][0]["message"],
+                    data: null
+                });
+            }
 
             const safe = await Safes.create({
                 user_id: user.id,
@@ -156,20 +153,13 @@ module.exports = {
                 }
             });
 
-      const updateSafe = await Safes.update(
-        {
-          user_id: user.id,
-          safeName: body.safeName,
-          openingBalance: body.amount,
-          id: params.id,
-        },
-        {
-          where: {
-            user_id: user.id,
-            id: params.id,
-          },
-        }
-      );
+            if (!updateSafe[0]) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Failed to update safe. You can not update other people safe',
+                    data: null
+                })
+            };
 
             const data = await Safes.findOne({
                 where: {
@@ -178,33 +168,27 @@ module.exports = {
                 }
             });
 
-      const data = await Safes.findOne({
-        where: {
-          user_id: user.id,
-          id: params.id,
-        },
-      });
+            return res.status(200).json({
+                status: 'success',
+                message: 'Successfully retrieved data safe',
+                updatedSafe: { data }
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'failed',
+                message: 'Internal server error',
+                data: null
+            })
+        };
+    },
 
-      return res.status(200).json({
-        status: "success",
-        message: "Successfully retrieved data safe",
-        updatedSafe: { data },
-      });
-    } catch (error) {
-      return res.status(500).json({
-        status: "failed",
-        message: "Internal server error",
-        data: null,
-      });
-    }
-  },
-  deleteSafe: async (req, res) => {
-    try {
-      const deletedSafe = await Safes.destroy({
-        where: {
-          id: req.params.id,
-        },
-      });
+    deleteSafe: async(req, res) => {
+        try {
+            const deletedSafe = await Safes.destroy({
+                where: {
+                    id: req.params.id,
+                },
+            });
 
             if (!deletedSafe) {
                 return res.status(400).json({
@@ -226,5 +210,4 @@ module.exports = {
             });
         }
     }
-  },
-};
+}
