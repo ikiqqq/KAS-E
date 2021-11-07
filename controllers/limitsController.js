@@ -15,6 +15,7 @@ module.exports = {
         limit: limit[i],
         safe_id: safe_id[i],
         user_id: user.id,
+        newLimit: limit[i]
       });
     }
     try {

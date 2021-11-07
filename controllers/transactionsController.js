@@ -74,7 +74,7 @@ module.exports = {
         detailExpense: body.detailExpense,
         expense: body.expense,
         type: "expense",
-        amount: safe.dataValues.amount - body.expense,
+        amount: limit.dataValues.newLimit - body.expense,
       });
 
       if (!create) {
