@@ -36,6 +36,7 @@ module.exports = {
         return res.status(400).json({
           status: "failed",
           message: "Unable to save the data to database",
+          data: null
         });
       }
       return res.status(200).json({
@@ -44,10 +45,10 @@ module.exports = {
         data: check,
       });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({
         status: "failed",
         message: "Internal Server Error",
+        data: null
       });
     }
   },
@@ -60,6 +61,7 @@ module.exports = {
         return res.status(404).json({
           status: "failed",
           message: "Data not found",
+          data: null
         });
       }
       return res.status(200).json({
@@ -68,10 +70,10 @@ module.exports = {
         data: category,
       });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({
         status: "failed",
         message: "Internal Server Error",
+        data: null
       });
     }
   },
@@ -118,6 +120,7 @@ module.exports = {
         return res.status(400).json({
           status: "failed",
           message: "Unable to update database",
+          data: null
         });
       }
 
@@ -136,6 +139,7 @@ module.exports = {
       return res.status(500).json({
         status: "failed",
         message: "Internal Server Error",
+        data: null
       });
     }
   },
@@ -144,13 +148,14 @@ module.exports = {
     try {
       const check = await Categories.destroy({
         where: {
-          id, // id : id
+          id,
         },
       });
       if (!check) {
         return res.status(400).json({
           status: "failed",
           message: "Unable to delete the data",
+          data: null
         });
       }
       return res.status(200).json({
@@ -161,6 +166,7 @@ module.exports = {
       return res.status(500).json({
         status: "failed",
         message: "Internal Server Error",
+        data: null
       });
     }
   },
