@@ -93,106 +93,126 @@ module.exports = {
       });
     }
   },
-  updateSafe: async (req, res) => {
-    const user = req.user;
-    const body = req.body;
-    const params = req.params;
-    try {
-      const schema = Joi.object({
-        user_id: Joi.number(),
-        safeName: Joi.string(),
-        amount: Joi.number(),
-      });
 
-      const { error } = schema.validate(
-        {
-          user_id: user.id,
-          safeName: body.safeName,
-          amount: body.amount,
-        },
-        { abortEarly: false }
-      );
+  updateSafe: async(req, res) => {
+        const user = req.user;
+        const body = req.body;
+        try {
+            const schema = Joi.object({
+                user_id: Joi.number(),
+                safeName: Joi.string(),
+                amount: Joi.number(),
+            });
 
-      if (error) {
-        return res.status(400).json({
-          status: "failed",
-          message: "Bad Request",
-          errors: error["details"][0]["message"],
-          data: null,
-        });
-      }
+            const { error } = schema.validate({
+                user_id: user.id,
+                safeName: body.safeName,
+                amount: body.amount,
+            }, { abortEarly: false });
 
-      const safe = await Safes.findOne({
-        where: {
-          id: params.id,
-          user_id: user.id,
-        },
-      });
+            if (error) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: "Bad Request",
+                    errors: error["details"][0]["message"],
+                    data: null
+                });
+            };
 
-      let updateSafe;
-      if (body.amount) {
-        const newAmount =
-          body.amount -
-          (safe.dataValues.openingBalance - safe.dataValues.amount);
-        updateSafe = await Safes.update(
-          {
-            user_id: user.id,
-            safeName: body.safeName,
-            openingBalance: body.amount,
-            amount: newAmount,
-            id: params.id,
-          },
-          {
-            where: {
-              user_id: user.id,
-              id: params.id,
-            },
-          }
-        );
-      }
-      updateSafe = await Safes.update(
-        {
-          user_id: user.id,
-          safeName: body.safeName,
-          id: params.id,
-        },
-        {
-          where: {
-            user_id: user.id,
-            id: params.id,
-          },
-        }
-      );
+            const userSafe = await Safes.findAll({
+                where: {
+                    user_id: user.id,
+                },
+                include: [{
+                    model: Users,
+                    as: "user",
+                    attributes: {
+                        exclude: ["password", "confirmPassword", "verifCode"]
+                    }
+                }]
+            });
 
-      if (!updateSafe[0]) {
-        return res.status(400).json({
-          status: "failed",
-          message:
-            "Failed to update safe. You can not update other people safe",
-          data: null,
-        });
-      }
+            if (!userSafe.length) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "There's no safe to be updated!",
+                    data: null
+                })
+            };
+            
+            const listSafes = userSafe.map((e) => {
+                return e.dataValues.id;
+            });
+            
+            const sortedList = listSafes.sort(function(a, b) {
+                return a - b;
+            });
+            
+            const targetedId = sortedList[sortedList.length - 1];
 
-      const data = await Safes.findOne({
-        where: {
-          user_id: user.id,
-          id: params.id,
-        },
-      });
+            const safe = await Safes.findOne({
+                where: {
+                    id: targetedId,
+                    user_id: user.id
+                }
+            });
 
-      return res.status(200).json({
-        status: "success",
-        message: "Successfully retrieved data safe",
-        updatedSafe: { data },
-      });
-    } catch (error) {
-      return res.status(500).json({
-        status: "failed",
-        message: "Internal server error",
-        data: null,
-      });
-    }
-  },
+            let updateSafe;
+            if (body.amount) {
+                const newAmount = body.amount - (safe.dataValues.openingBalance - safe.dataValues.amount)
+                updateSafe = await Safes.update({
+                    user_id: user.id,
+                    safeName: body.safeName,
+                    openingBalance: body.amount,
+                    amount: newAmount,
+                    id: targetedId
+                }, {
+                    where: {
+                        user_id: user.id,
+                        id: targetedId
+                    }
+                });
+            };
+
+            updateSafe = await Safes.update({
+                user_id: user.id,
+                safeName: body.safeName,
+                id: targetedId
+            }, {
+                where: {
+                    user_id: user.id,
+                    id: targetedId
+                }
+            });
+
+            if (!updateSafe[0]) {
+                return res.status(400).json({
+                    status: 'failed',
+                    message: 'Failed to update safe. You can not update other people safe',
+                    data: null
+                })
+            };
+
+            const data = await Safes.findOne({
+                where: {
+                    user_id: user.id,
+                    id: targetedId
+                }
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                message: 'Successfully retrieved data safe',
+                updatedSafe: { data }
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: 'failed',
+                message: 'Internal server error',
+                data: null
+            })
+        };
+    },
   deleteSafe: async (req, res) => {
     try {
       const deletedSafe = await Safes.destroy({
