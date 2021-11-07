@@ -1,7 +1,5 @@
 const Joi = require("joi");
 const { Limits, Categories } = require("../models");
-// const jwt = require("../helpers/jwt");
-// const {getUserData} = require("../helpers/jwt")
 
 module.exports = {
   postLimit: async (req, res) => {
